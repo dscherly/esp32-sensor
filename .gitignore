@@ -3,3 +3,4 @@ build/
 .settings/org.eclipse.cdt.core.prefs
 .settings/language.settings.xml
 .cproject
+sdkconfig.old
