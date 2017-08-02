@@ -129,20 +129,19 @@ void IRAM_ATTR timer_group0_isr(void *para)
     uint32_t intr_status = TIMERG0.int_st_timers.val;
 
     if((intr_status & BIT(timer_idx)) && timer_idx == TIMER_0) {
-        /*Timer0 is an example that doesn't reload counter value*/
         TIMERG0.hw_timer[timer_idx].update = 1;
         TIMERG0.int_clr_timers.t0 = 1;
         uint64_t timer_val = ((uint64_t) TIMERG0.hw_timer[timer_idx].cnt_high) << 32 | TIMERG0.hw_timer[timer_idx].cnt_low;
 
-        if( (xEventGroupGetBits( globalPtrs->wifi_event_group ) & PAUSE_ADC) > 0 ){
-        	xEventGroupClearBits( globalPtrs->wifi_event_group, PAUSE_ADC);
+        if( (xEventGroupGetBits( globalPtrs->system_event_group ) & FW_UPDATING) > 0 ){
+//        	xEventGroupClearBits( globalPtrs->system_event_group, FW_UPDATING); //this will be cleared when OTA finishes
         	evt.type = DISABLE_INTERRUPT;
         	xQueueSendFromISR(timer_queue, &evt, NULL);
         }
 
         //check if nodeid has been changed
-        if( (xEventGroupGetBits( globalPtrs->wifi_event_group ) & NEW_NODEID) > 0 ){
-        	xEventGroupClearBits( globalPtrs->wifi_event_group, NEW_NODEID);
+        if( (xEventGroupGetBits( globalPtrs->system_event_group ) & NEW_NODEID) > 0 ){
+        	xEventGroupClearBits( globalPtrs->system_event_group, NEW_NODEID);
         	if( !get_flash_uint8( &nodeid, "nodeid") ){
         		nodeid = (uint8_t) DEFAULT_NODEID;
         	}

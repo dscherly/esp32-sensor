@@ -94,6 +94,7 @@ ims_tcp.o: /Users/dan/esp/esp32-sensor/main/./ims_tcp.c \
  /Users/dan/esp/esp-idf/components/lwip/include/lwip/lwip/sockets.h \
  /Users/dan/esp/esp-idf/components/lwip/include/lwip/lwip/err.h \
  /Users/dan/esp/esp-idf/components/lwip/include/lwip/lwip/inet.h \
+ /Users/dan/esp/esp-idf/components/lwip/include/lwip/port/arch/cc.h \
  /Users/dan/esp/esp32-sensor/main/./ims_nvs.h \
  /Users/dan/esp/esp32-sensor/main/./ims_projdefs.h \
  /Users/dan/esp/esp32-sensor/main/./ims_tcp.h \
@@ -313,6 +314,8 @@ ims_tcp.o: /Users/dan/esp/esp32-sensor/main/./ims_tcp.c \
 /Users/dan/esp/esp-idf/components/lwip/include/lwip/lwip/err.h:
 
 /Users/dan/esp/esp-idf/components/lwip/include/lwip/lwip/inet.h:
+
+/Users/dan/esp/esp-idf/components/lwip/include/lwip/port/arch/cc.h:
 
 /Users/dan/esp/esp32-sensor/main/./ims_nvs.h:
 

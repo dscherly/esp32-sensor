@@ -36,7 +36,7 @@ int read_until(char *buffer, char delim, int len);
 bool read_past_http_header(char text[], int total_len, esp_ota_handle_t out_handle);
 bool connect_to_http_server();
 bool ota_init();
-bool ota_run(void);
+int ota_run(void);
 
 #ifdef __cplusplus
 }

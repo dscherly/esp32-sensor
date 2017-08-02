@@ -75,18 +75,32 @@ ims_ota.o: /Users/dan/esp/esp32-sensor/main/./ims_ota.c \
  /Users/dan/esp/esp-idf/components/lwip/include/lwip/lwip/ip6_addr.h \
  /Users/dan/esp/esp-idf/components/lwip/include/lwip/lwip/err.h \
  /Users/dan/esp/esp-idf/components/lwip/include/lwip/lwip/inet.h \
+ /Users/dan/esp/esp-idf/components/app_update/include/esp_ota_ops.h \
+ /Users/dan/esp/esp-idf/components/esp32/include/esp_err.h \
+ /Users/dan/esp/esp-idf/components/newlib/include/assert.h \
+ /Users/dan/esp/esp-idf/components/spi_flash/include/esp_partition.h \
+ /Users/dan/esp/esp-idf/components/spi_flash/include/esp_spi_flash.h \
+ /Users/dan/esp/esp-idf/components/spi_flash/include/esp_spi_flash.h \
+ /Users/dan/esp/esp32-sensor/main/./ims_projdefs.h \
+ /Users/dan/esp/esp-idf/components/esp32/include/esp_wifi.h \
+ /Users/dan/esp/esp-idf/components/esp32/include/rom/queue.h \
+ /Users/dan/esp/esp-idf/components/esp32/include/esp_wifi_types.h \
+ /Users/dan/esp/esp-idf/components/esp32/include/esp_interface.h \
+ /Users/dan/esp/esp-idf/components/esp32/include/esp_event.h \
+ /Users/dan/esp/esp-idf/components/tcpip_adapter/include/tcpip_adapter.h \
+ /Users/dan/esp/esp-idf/components/esp32/include/rom/queue.h \
+ /Users/dan/esp/esp-idf/components/esp32/include/esp_wifi_types.h \
+ /Users/dan/esp/esp-idf/components/lwip/include/lwip/apps/dhcpserver.h \
+ /Users/dan/esp/esp-idf/components/freertos/include/freertos/event_groups.h \
+ /Users/dan/esp/esp-idf/components/freertos/include/freertos/timers.h \
+ /Users/dan/esp/esp-idf/components/freertos/include/freertos/task.h \
  /Users/dan/esp/esp32-sensor/main/./ims_ota.h \
  /Users/dan/esp/esp-idf/components/newlib/include/string.h \
  /Users/dan/esp/esp-idf/components/newlib/include/sys/string.h \
  /Users/dan/esp/esp-idf/components/lwip/include/lwip/posix/sys/socket.h \
  /Users/dan/esp/esp-idf/components/lwip/include/lwip/posix/netdb.h \
  /Users/dan/esp/esp-idf/components/lwip/include/lwip/lwip/netdb.h \
- /Users/dan/esp/esp-idf/components/freertos/include/freertos/event_groups.h \
- /Users/dan/esp/esp-idf/components/freertos/include/freertos/timers.h \
- /Users/dan/esp/esp-idf/components/freertos/include/freertos/task.h \
  /Users/dan/esp/esp-idf/components/esp32/include/esp_system.h \
- /Users/dan/esp/esp-idf/components/esp32/include/esp_err.h \
- /Users/dan/esp/esp-idf/components/newlib/include/assert.h \
  /Users/dan/esp/esp-idf/components/esp32/include/esp_deep_sleep.h \
  /Users/dan/esp/esp-idf/components/driver/include/driver/gpio.h \
  /Users/dan/esp/esp-idf/components/esp32/include/esp_types.h \
@@ -103,21 +117,8 @@ ims_ota.o: /Users/dan/esp/esp32-sensor/main/./ims_ota.c \
  /Users/dan/esp/esp-idf/components/esp32/include/esp_intr.h \
  /Users/dan/esp/esp-idf/components/esp32/include/rom/ets_sys.h \
  /Users/dan/esp/esp-idf/components/freertos/include/freertos/xtensa_api.h \
- /Users/dan/esp/esp-idf/components/esp32/include/esp_wifi.h \
- /Users/dan/esp/esp-idf/components/esp32/include/rom/queue.h \
- /Users/dan/esp/esp-idf/components/esp32/include/esp_wifi_types.h \
- /Users/dan/esp/esp-idf/components/esp32/include/esp_interface.h \
- /Users/dan/esp/esp-idf/components/esp32/include/esp_event.h \
- /Users/dan/esp/esp-idf/components/tcpip_adapter/include/tcpip_adapter.h \
- /Users/dan/esp/esp-idf/components/esp32/include/rom/queue.h \
- /Users/dan/esp/esp-idf/components/esp32/include/esp_wifi_types.h \
- /Users/dan/esp/esp-idf/components/lwip/include/lwip/apps/dhcpserver.h \
  /Users/dan/esp/esp-idf/components/esp32/include/esp_event_loop.h \
  /Users/dan/esp/esp-idf/components/log/include/esp_log.h \
- /Users/dan/esp/esp-idf/components/app_update/include/esp_ota_ops.h \
- /Users/dan/esp/esp-idf/components/spi_flash/include/esp_partition.h \
- /Users/dan/esp/esp-idf/components/spi_flash/include/esp_spi_flash.h \
- /Users/dan/esp/esp-idf/components/spi_flash/include/esp_spi_flash.h \
  /Users/dan/esp/esp-idf/components/nvs_flash/include/nvs_flash.h
 
 /Users/dan/esp/esp-idf/components/newlib/include/stdio.h:
@@ -272,6 +273,44 @@ ims_ota.o: /Users/dan/esp/esp32-sensor/main/./ims_ota.c \
 
 /Users/dan/esp/esp-idf/components/lwip/include/lwip/lwip/inet.h:
 
+/Users/dan/esp/esp-idf/components/app_update/include/esp_ota_ops.h:
+
+/Users/dan/esp/esp-idf/components/esp32/include/esp_err.h:
+
+/Users/dan/esp/esp-idf/components/newlib/include/assert.h:
+
+/Users/dan/esp/esp-idf/components/spi_flash/include/esp_partition.h:
+
+/Users/dan/esp/esp-idf/components/spi_flash/include/esp_spi_flash.h:
+
+/Users/dan/esp/esp-idf/components/spi_flash/include/esp_spi_flash.h:
+
+/Users/dan/esp/esp32-sensor/main/./ims_projdefs.h:
+
+/Users/dan/esp/esp-idf/components/esp32/include/esp_wifi.h:
+
+/Users/dan/esp/esp-idf/components/esp32/include/rom/queue.h:
+
+/Users/dan/esp/esp-idf/components/esp32/include/esp_wifi_types.h:
+
+/Users/dan/esp/esp-idf/components/esp32/include/esp_interface.h:
+
+/Users/dan/esp/esp-idf/components/esp32/include/esp_event.h:
+
+/Users/dan/esp/esp-idf/components/tcpip_adapter/include/tcpip_adapter.h:
+
+/Users/dan/esp/esp-idf/components/esp32/include/rom/queue.h:
+
+/Users/dan/esp/esp-idf/components/esp32/include/esp_wifi_types.h:
+
+/Users/dan/esp/esp-idf/components/lwip/include/lwip/apps/dhcpserver.h:
+
+/Users/dan/esp/esp-idf/components/freertos/include/freertos/event_groups.h:
+
+/Users/dan/esp/esp-idf/components/freertos/include/freertos/timers.h:
+
+/Users/dan/esp/esp-idf/components/freertos/include/freertos/task.h:
+
 /Users/dan/esp/esp32-sensor/main/./ims_ota.h:
 
 /Users/dan/esp/esp-idf/components/newlib/include/string.h:
@@ -284,17 +323,7 @@ ims_ota.o: /Users/dan/esp/esp32-sensor/main/./ims_ota.c \
 
 /Users/dan/esp/esp-idf/components/lwip/include/lwip/lwip/netdb.h:
 
-/Users/dan/esp/esp-idf/components/freertos/include/freertos/event_groups.h:
-
-/Users/dan/esp/esp-idf/components/freertos/include/freertos/timers.h:
-
-/Users/dan/esp/esp-idf/components/freertos/include/freertos/task.h:
-
 /Users/dan/esp/esp-idf/components/esp32/include/esp_system.h:
-
-/Users/dan/esp/esp-idf/components/esp32/include/esp_err.h:
-
-/Users/dan/esp/esp-idf/components/newlib/include/assert.h:
 
 /Users/dan/esp/esp-idf/components/esp32/include/esp_deep_sleep.h:
 
@@ -328,34 +357,8 @@ ims_ota.o: /Users/dan/esp/esp32-sensor/main/./ims_ota.c \
 
 /Users/dan/esp/esp-idf/components/freertos/include/freertos/xtensa_api.h:
 
-/Users/dan/esp/esp-idf/components/esp32/include/esp_wifi.h:
-
-/Users/dan/esp/esp-idf/components/esp32/include/rom/queue.h:
-
-/Users/dan/esp/esp-idf/components/esp32/include/esp_wifi_types.h:
-
-/Users/dan/esp/esp-idf/components/esp32/include/esp_interface.h:
-
-/Users/dan/esp/esp-idf/components/esp32/include/esp_event.h:
-
-/Users/dan/esp/esp-idf/components/tcpip_adapter/include/tcpip_adapter.h:
-
-/Users/dan/esp/esp-idf/components/esp32/include/rom/queue.h:
-
-/Users/dan/esp/esp-idf/components/esp32/include/esp_wifi_types.h:
-
-/Users/dan/esp/esp-idf/components/lwip/include/lwip/apps/dhcpserver.h:
-
 /Users/dan/esp/esp-idf/components/esp32/include/esp_event_loop.h:
 
 /Users/dan/esp/esp-idf/components/log/include/esp_log.h:
-
-/Users/dan/esp/esp-idf/components/app_update/include/esp_ota_ops.h:
-
-/Users/dan/esp/esp-idf/components/spi_flash/include/esp_partition.h:
-
-/Users/dan/esp/esp-idf/components/spi_flash/include/esp_spi_flash.h:
-
-/Users/dan/esp/esp-idf/components/spi_flash/include/esp_spi_flash.h:
 
 /Users/dan/esp/esp-idf/components/nvs_flash/include/nvs_flash.h:

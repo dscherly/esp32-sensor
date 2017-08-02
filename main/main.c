@@ -71,6 +71,7 @@ void app_main(void) {
 	nvs_flash_init();
 
     globalPtrs.wifi_event_group = xEventGroupCreate();
+    globalPtrs.system_event_group = xEventGroupCreate();
     globalPtrs.udp_tx_q = xQueueCreate(10, sizeof(adc_data_t));
 
 	ESP_ERROR_CHECK(esp_event_loop_init(event_handler, NULL));
