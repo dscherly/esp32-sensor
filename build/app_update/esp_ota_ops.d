@@ -1,209 +1,202 @@
-esp_ota_ops.o: \
- /Users/dan/esp/esp-idf/components/app_update/./esp_ota_ops.c \
- /Users/dan/esp/esp-idf/components/newlib/include/stdint.h \
- /Users/dan/esp/esp-idf/components/newlib/include/machine/_default_types.h \
- /Users/dan/esp/esp-idf/components/newlib/include/sys/features.h \
- /Users/dan/esp/esp-idf/components/newlib/include/sys/_intsup.h \
- /Users/dan/esp/esp-idf/components/newlib/include/stdlib.h \
- /Users/dan/esp/esp-idf/components/newlib/include/machine/ieeefp.h \
- /Users/dan/esp/esp-idf/components/newlib/include/_ansi.h \
- /Users/dan/esp/esp-idf/components/newlib/include/newlib.h \
- /Users/dan/esp/esp-idf/components/newlib/include/sys/config.h \
- /Users/dan/esp/esp-idf/components/esp32/include/xtensa/config/core-isa.h \
- /Users/dan/esp/esp-idf/components/newlib/include/sys/reent.h \
- /Users/dan/esp/esp-idf/components/newlib/include/_ansi.h \
- /Users/dan/esp/esp-idf/components/newlib/include/sys/_types.h \
- /Users/dan/esp/esp-idf/components/newlib/include/machine/_types.h \
- /Users/dan/esp/esp-idf/components/newlib/include/sys/lock.h \
- /Users/dan/esp/esp-idf/components/newlib/include/sys/cdefs.h \
- /Users/dan/esp/esp-idf/components/newlib/include/machine/stdlib.h \
- /Users/dan/esp/esp-idf/components/newlib/include/alloca.h \
- /Users/dan/esp/esp-idf/components/newlib/include/stdio.h \
- /Users/dan/esp/esp-idf/components/newlib/include/sys/types.h \
- /Users/dan/esp/esp-idf/components/newlib/include/machine/types.h \
- /Users/dan/esp/esp-idf/components/newlib/include/sys/stdio.h \
- /Users/dan/esp/esp-idf/components/newlib/include/string.h \
- /Users/dan/esp/esp-idf/components/newlib/include/sys/string.h \
- /Users/dan/esp/esp-idf/components/newlib/include/assert.h \
- /Users/dan/esp/esp-idf/components/freertos/include/freertos/FreeRTOS.h \
- /Users/dan/esp/esp-idf/components/freertos/include/freertos/FreeRTOSConfig.h \
- /Users/dan/esp/esp32-sensor/build/include/sdkconfig.h \
- /Users/dan/esp/esp-idf/components/freertos/include/freertos/xtensa_config.h \
- /Users/dan/esp/esp-idf/components/esp32/include/xtensa/hal.h \
- /Users/dan/esp/esp-idf/components/esp32/include/xtensa/config/core.h \
- /Users/dan/esp/esp-idf/components/esp32/include/xtensa/xtensa-versions.h \
- /Users/dan/esp/esp-idf/components/esp32/include/xtensa/config/core-matmap.h \
- /Users/dan/esp/esp-idf/components/esp32/include/xtensa/config/tie.h \
- /Users/dan/esp/esp-idf/components/esp32/include/xtensa/config/system.h \
- /Users/dan/esp/esp-idf/components/freertos/include/freertos/xtensa_context.h \
- /Users/dan/esp/esp-idf/components/esp32/include/xtensa/corebits.h \
- /Users/dan/esp/esp-idf/components/esp32/include/xtensa/xtruntime-frames.h \
- /Users/dan/esp/esp-idf/components/esp32/include/rom/ets_sys.h \
- /Users/dan/esp/esp-idf/components/soc/esp32/include/soc/soc.h \
- /Users/dan/esp/esp-idf/components/freertos/include/freertos/projdefs.h \
- /Users/dan/esp/esp-idf/components/freertos/include/freertos/portable.h \
- /Users/dan/esp/esp-idf/components/freertos/include/freertos/deprecated_definitions.h \
- /Users/dan/esp/esp-idf/components/freertos/include/freertos/portmacro.h \
- /Users/dan/esp/esp-idf/components/esp32/include/xtensa/tie/xt_core.h \
- /Users/dan/esp/esp-idf/components/esp32/include/xtensa/xtruntime.h \
- /Users/dan/esp/esp-idf/components/esp32/include/xtensa/config/specreg.h \
- /Users/dan/esp/esp-idf/components/esp32/include/xtensa/xtruntime-core-state.h \
- /Users/dan/esp/esp-idf/components/esp32/include/esp_crosscore_int.h \
- /Users/dan/esp/esp-idf/components/freertos/include/freertos/portbenchmark.h \
- /Users/dan/esp/esp-idf/components/freertos/include/freertos/mpu_wrappers.h \
- /Users/dan/esp/esp-idf/components/freertos/include/freertos/task.h \
- /Users/dan/esp/esp-idf/components/newlib/include/limits.h \
- /Users/dan/esp/esp-idf/components/freertos/include/freertos/list.h \
- /Users/dan/esp/esp-idf/components/esp32/include/esp_err.h \
- /Users/dan/esp/esp-idf/components/spi_flash/include/esp_partition.h \
- /Users/dan/esp/esp-idf/components/spi_flash/include/esp_spi_flash.h \
- /Users/dan/esp/esp-idf/components/spi_flash/include/esp_spi_flash.h \
- /Users/dan/esp/esp-idf/components/bootloader_support/include/esp_image_format.h \
- /Users/dan/esp/esp-idf/components/bootloader_support/include/esp_secure_boot.h \
- /Users/dan/esp/esp-idf/components/soc/esp32/include/soc/efuse_reg.h \
- /Users/dan/esp/esp-idf/components/soc/esp32/include/soc/soc.h \
- /Users/dan/esp/esp-idf/components/bootloader_support/include/esp_flash_encrypt.h \
- /Users/dan/esp/esp-idf/components/esp32/include/esp_attr.h \
- /Users/dan/esp/esp-idf/components/app_update/include/esp_ota_ops.h \
- /Users/dan/esp/esp-idf/components/esp32/include/rom/queue.h \
- /Users/dan/esp/esp-idf/components/esp32/include/rom/crc.h \
- /Users/dan/esp/esp-idf/components/soc/esp32/include/soc/dport_reg.h \
- /Users/dan/esp/esp-idf/components/log/include/esp_log.h
+esp_ota_ops.o: C:/esp32/esp-idf/components/app_update/esp_ota_ops.c \
+ C:/esp32/esp-idf/components/newlib/include/stdint.h \
+ C:/esp32/esp-idf/components/newlib/include/machine/_default_types.h \
+ C:/esp32/esp-idf/components/newlib/include/sys/features.h \
+ C:/esp32/esp-idf/components/newlib/include/sys/_intsup.h \
+ C:/esp32/esp-idf/components/newlib/include/stdlib.h \
+ C:/esp32/esp-idf/components/newlib/include/machine/ieeefp.h \
+ C:/esp32/esp-idf/components/newlib/include/_ansi.h \
+ C:/esp32/esp-idf/components/newlib/include/newlib.h \
+ C:/esp32/esp-idf/components/newlib/include/sys/config.h \
+ C:/esp32/esp-idf/components/esp32/include/xtensa/config/core-isa.h \
+ C:/esp32/esp-idf/components/newlib/include/sys/reent.h \
+ C:/esp32/esp-idf/components/newlib/include/_ansi.h \
+ C:/esp32/esp-idf/components/newlib/include/sys/_types.h \
+ C:/esp32/esp-idf/components/newlib/include/machine/_types.h \
+ C:/esp32/esp-idf/components/newlib/include/sys/lock.h \
+ C:/esp32/esp-idf/components/newlib/include/sys/cdefs.h \
+ C:/esp32/esp-idf/components/newlib/include/machine/stdlib.h \
+ C:/esp32/esp-idf/components/newlib/include/alloca.h \
+ C:/esp32/esp-idf/components/newlib/include/stdio.h \
+ C:/esp32/esp-idf/components/newlib/include/sys/types.h \
+ C:/esp32/esp-idf/components/newlib/include/machine/types.h \
+ C:/esp32/esp-idf/components/newlib/include/sys/stdio.h \
+ C:/esp32/esp-idf/components/newlib/include/string.h \
+ C:/esp32/esp-idf/components/newlib/include/sys/string.h \
+ C:/esp32/esp-idf/components/newlib/include/assert.h \
+ C:/esp32/esp-idf/components/freertos/include/freertos/FreeRTOS.h \
+ C:/esp32/esp-idf/components/freertos/include/freertos/FreeRTOSConfig.h \
+ C:/esp32/esp32-sensor/build/include/sdkconfig.h \
+ C:/esp32/esp-idf/components/freertos/include/freertos/xtensa_config.h \
+ C:/esp32/esp-idf/components/esp32/include/xtensa/hal.h \
+ C:/esp32/esp-idf/components/esp32/include/xtensa/config/core.h \
+ C:/esp32/esp-idf/components/esp32/include/xtensa/xtensa-versions.h \
+ C:/esp32/esp-idf/components/esp32/include/xtensa/config/core-matmap.h \
+ C:/esp32/esp-idf/components/esp32/include/xtensa/config/tie.h \
+ C:/esp32/esp-idf/components/esp32/include/xtensa/config/system.h \
+ C:/esp32/esp-idf/components/freertos/include/freertos/xtensa_context.h \
+ C:/esp32/esp-idf/components/esp32/include/xtensa/corebits.h \
+ C:/esp32/esp-idf/components/esp32/include/xtensa/xtruntime-frames.h \
+ C:/esp32/esp-idf/components/esp32/include/rom/ets_sys.h \
+ C:/esp32/esp-idf/components/esp32/include/soc/soc.h \
+ C:/esp32/esp-idf/components/freertos/include/freertos/projdefs.h \
+ C:/esp32/esp-idf/components/freertos/include/freertos/portable.h \
+ C:/esp32/esp-idf/components/freertos/include/freertos/deprecated_definitions.h \
+ C:/esp32/esp-idf/components/freertos/include/freertos/portmacro.h \
+ C:/esp32/esp-idf/components/esp32/include/xtensa/tie/xt_core.h \
+ C:/esp32/esp-idf/components/esp32/include/xtensa/xtruntime.h \
+ C:/esp32/esp-idf/components/esp32/include/xtensa/config/specreg.h \
+ C:/esp32/esp-idf/components/esp32/include/xtensa/xtruntime-core-state.h \
+ C:/esp32/esp-idf/components/freertos/include/freertos/portbenchmark.h \
+ C:/esp32/esp-idf/components/freertos/include/freertos/mpu_wrappers.h \
+ C:/esp32/esp-idf/components/freertos/include/freertos/task.h \
+ C:/esp32/esp-idf/components/newlib/include/limits.h \
+ C:/esp32/esp-idf/components/freertos/include/freertos/list.h \
+ C:/esp32/esp-idf/components/esp32/include/esp_err.h \
+ C:/esp32/esp-idf/components/spi_flash/include/esp_partition.h \
+ C:/esp32/esp-idf/components/spi_flash/include/esp_spi_flash.h \
+ C:/esp32/esp-idf/components/spi_flash/include/esp_spi_flash.h \
+ C:/esp32/esp-idf/components/bootloader_support/include/esp_image_format.h \
+ C:/esp32/esp-idf/components/bootloader_support/include/esp_secure_boot.h \
+ C:/esp32/esp-idf/components/esp32/include/soc/efuse_reg.h \
+ C:/esp32/esp-idf/components/esp32/include/soc/soc.h \
+ C:/esp32/esp-idf/components/bootloader_support/include/esp_flash_encrypt.h \
+ C:/esp32/esp-idf/components/esp32/include/esp_attr.h \
+ C:/esp32/esp-idf/components/app_update/include/esp_ota_ops.h \
+ C:/esp32/esp-idf/components/esp32/include/rom/queue.h \
+ C:/esp32/esp-idf/components/esp32/include/rom/crc.h \
+ C:/esp32/esp-idf/components/log/include/esp_log.h
 
-/Users/dan/esp/esp-idf/components/newlib/include/stdint.h:
+C:/esp32/esp-idf/components/newlib/include/stdint.h:
 
-/Users/dan/esp/esp-idf/components/newlib/include/machine/_default_types.h:
+C:/esp32/esp-idf/components/newlib/include/machine/_default_types.h:
 
-/Users/dan/esp/esp-idf/components/newlib/include/sys/features.h:
+C:/esp32/esp-idf/components/newlib/include/sys/features.h:
 
-/Users/dan/esp/esp-idf/components/newlib/include/sys/_intsup.h:
+C:/esp32/esp-idf/components/newlib/include/sys/_intsup.h:
 
-/Users/dan/esp/esp-idf/components/newlib/include/stdlib.h:
+C:/esp32/esp-idf/components/newlib/include/stdlib.h:
 
-/Users/dan/esp/esp-idf/components/newlib/include/machine/ieeefp.h:
+C:/esp32/esp-idf/components/newlib/include/machine/ieeefp.h:
 
-/Users/dan/esp/esp-idf/components/newlib/include/_ansi.h:
+C:/esp32/esp-idf/components/newlib/include/_ansi.h:
 
-/Users/dan/esp/esp-idf/components/newlib/include/newlib.h:
+C:/esp32/esp-idf/components/newlib/include/newlib.h:
 
-/Users/dan/esp/esp-idf/components/newlib/include/sys/config.h:
+C:/esp32/esp-idf/components/newlib/include/sys/config.h:
 
-/Users/dan/esp/esp-idf/components/esp32/include/xtensa/config/core-isa.h:
+C:/esp32/esp-idf/components/esp32/include/xtensa/config/core-isa.h:
 
-/Users/dan/esp/esp-idf/components/newlib/include/sys/reent.h:
+C:/esp32/esp-idf/components/newlib/include/sys/reent.h:
 
-/Users/dan/esp/esp-idf/components/newlib/include/_ansi.h:
+C:/esp32/esp-idf/components/newlib/include/_ansi.h:
 
-/Users/dan/esp/esp-idf/components/newlib/include/sys/_types.h:
+C:/esp32/esp-idf/components/newlib/include/sys/_types.h:
 
-/Users/dan/esp/esp-idf/components/newlib/include/machine/_types.h:
+C:/esp32/esp-idf/components/newlib/include/machine/_types.h:
 
-/Users/dan/esp/esp-idf/components/newlib/include/sys/lock.h:
+C:/esp32/esp-idf/components/newlib/include/sys/lock.h:
 
-/Users/dan/esp/esp-idf/components/newlib/include/sys/cdefs.h:
+C:/esp32/esp-idf/components/newlib/include/sys/cdefs.h:
 
-/Users/dan/esp/esp-idf/components/newlib/include/machine/stdlib.h:
+C:/esp32/esp-idf/components/newlib/include/machine/stdlib.h:
 
-/Users/dan/esp/esp-idf/components/newlib/include/alloca.h:
+C:/esp32/esp-idf/components/newlib/include/alloca.h:
 
-/Users/dan/esp/esp-idf/components/newlib/include/stdio.h:
+C:/esp32/esp-idf/components/newlib/include/stdio.h:
 
-/Users/dan/esp/esp-idf/components/newlib/include/sys/types.h:
+C:/esp32/esp-idf/components/newlib/include/sys/types.h:
 
-/Users/dan/esp/esp-idf/components/newlib/include/machine/types.h:
+C:/esp32/esp-idf/components/newlib/include/machine/types.h:
 
-/Users/dan/esp/esp-idf/components/newlib/include/sys/stdio.h:
+C:/esp32/esp-idf/components/newlib/include/sys/stdio.h:
 
-/Users/dan/esp/esp-idf/components/newlib/include/string.h:
+C:/esp32/esp-idf/components/newlib/include/string.h:
 
-/Users/dan/esp/esp-idf/components/newlib/include/sys/string.h:
+C:/esp32/esp-idf/components/newlib/include/sys/string.h:
 
-/Users/dan/esp/esp-idf/components/newlib/include/assert.h:
+C:/esp32/esp-idf/components/newlib/include/assert.h:
 
-/Users/dan/esp/esp-idf/components/freertos/include/freertos/FreeRTOS.h:
+C:/esp32/esp-idf/components/freertos/include/freertos/FreeRTOS.h:
 
-/Users/dan/esp/esp-idf/components/freertos/include/freertos/FreeRTOSConfig.h:
+C:/esp32/esp-idf/components/freertos/include/freertos/FreeRTOSConfig.h:
 
-/Users/dan/esp/esp32-sensor/build/include/sdkconfig.h:
+C:/esp32/esp32-sensor/build/include/sdkconfig.h:
 
-/Users/dan/esp/esp-idf/components/freertos/include/freertos/xtensa_config.h:
+C:/esp32/esp-idf/components/freertos/include/freertos/xtensa_config.h:
 
-/Users/dan/esp/esp-idf/components/esp32/include/xtensa/hal.h:
+C:/esp32/esp-idf/components/esp32/include/xtensa/hal.h:
 
-/Users/dan/esp/esp-idf/components/esp32/include/xtensa/config/core.h:
+C:/esp32/esp-idf/components/esp32/include/xtensa/config/core.h:
 
-/Users/dan/esp/esp-idf/components/esp32/include/xtensa/xtensa-versions.h:
+C:/esp32/esp-idf/components/esp32/include/xtensa/xtensa-versions.h:
 
-/Users/dan/esp/esp-idf/components/esp32/include/xtensa/config/core-matmap.h:
+C:/esp32/esp-idf/components/esp32/include/xtensa/config/core-matmap.h:
 
-/Users/dan/esp/esp-idf/components/esp32/include/xtensa/config/tie.h:
+C:/esp32/esp-idf/components/esp32/include/xtensa/config/tie.h:
 
-/Users/dan/esp/esp-idf/components/esp32/include/xtensa/config/system.h:
+C:/esp32/esp-idf/components/esp32/include/xtensa/config/system.h:
 
-/Users/dan/esp/esp-idf/components/freertos/include/freertos/xtensa_context.h:
+C:/esp32/esp-idf/components/freertos/include/freertos/xtensa_context.h:
 
-/Users/dan/esp/esp-idf/components/esp32/include/xtensa/corebits.h:
+C:/esp32/esp-idf/components/esp32/include/xtensa/corebits.h:
 
-/Users/dan/esp/esp-idf/components/esp32/include/xtensa/xtruntime-frames.h:
+C:/esp32/esp-idf/components/esp32/include/xtensa/xtruntime-frames.h:
 
-/Users/dan/esp/esp-idf/components/esp32/include/rom/ets_sys.h:
+C:/esp32/esp-idf/components/esp32/include/rom/ets_sys.h:
 
-/Users/dan/esp/esp-idf/components/soc/esp32/include/soc/soc.h:
+C:/esp32/esp-idf/components/esp32/include/soc/soc.h:
 
-/Users/dan/esp/esp-idf/components/freertos/include/freertos/projdefs.h:
+C:/esp32/esp-idf/components/freertos/include/freertos/projdefs.h:
 
-/Users/dan/esp/esp-idf/components/freertos/include/freertos/portable.h:
+C:/esp32/esp-idf/components/freertos/include/freertos/portable.h:
 
-/Users/dan/esp/esp-idf/components/freertos/include/freertos/deprecated_definitions.h:
+C:/esp32/esp-idf/components/freertos/include/freertos/deprecated_definitions.h:
 
-/Users/dan/esp/esp-idf/components/freertos/include/freertos/portmacro.h:
+C:/esp32/esp-idf/components/freertos/include/freertos/portmacro.h:
 
-/Users/dan/esp/esp-idf/components/esp32/include/xtensa/tie/xt_core.h:
+C:/esp32/esp-idf/components/esp32/include/xtensa/tie/xt_core.h:
 
-/Users/dan/esp/esp-idf/components/esp32/include/xtensa/xtruntime.h:
+C:/esp32/esp-idf/components/esp32/include/xtensa/xtruntime.h:
 
-/Users/dan/esp/esp-idf/components/esp32/include/xtensa/config/specreg.h:
+C:/esp32/esp-idf/components/esp32/include/xtensa/config/specreg.h:
 
-/Users/dan/esp/esp-idf/components/esp32/include/xtensa/xtruntime-core-state.h:
+C:/esp32/esp-idf/components/esp32/include/xtensa/xtruntime-core-state.h:
 
-/Users/dan/esp/esp-idf/components/esp32/include/esp_crosscore_int.h:
+C:/esp32/esp-idf/components/freertos/include/freertos/portbenchmark.h:
 
-/Users/dan/esp/esp-idf/components/freertos/include/freertos/portbenchmark.h:
+C:/esp32/esp-idf/components/freertos/include/freertos/mpu_wrappers.h:
 
-/Users/dan/esp/esp-idf/components/freertos/include/freertos/mpu_wrappers.h:
+C:/esp32/esp-idf/components/freertos/include/freertos/task.h:
 
-/Users/dan/esp/esp-idf/components/freertos/include/freertos/task.h:
+C:/esp32/esp-idf/components/newlib/include/limits.h:
 
-/Users/dan/esp/esp-idf/components/newlib/include/limits.h:
+C:/esp32/esp-idf/components/freertos/include/freertos/list.h:
 
-/Users/dan/esp/esp-idf/components/freertos/include/freertos/list.h:
+C:/esp32/esp-idf/components/esp32/include/esp_err.h:
 
-/Users/dan/esp/esp-idf/components/esp32/include/esp_err.h:
+C:/esp32/esp-idf/components/spi_flash/include/esp_partition.h:
 
-/Users/dan/esp/esp-idf/components/spi_flash/include/esp_partition.h:
+C:/esp32/esp-idf/components/spi_flash/include/esp_spi_flash.h:
 
-/Users/dan/esp/esp-idf/components/spi_flash/include/esp_spi_flash.h:
+C:/esp32/esp-idf/components/spi_flash/include/esp_spi_flash.h:
 
-/Users/dan/esp/esp-idf/components/spi_flash/include/esp_spi_flash.h:
+C:/esp32/esp-idf/components/bootloader_support/include/esp_image_format.h:
 
-/Users/dan/esp/esp-idf/components/bootloader_support/include/esp_image_format.h:
+C:/esp32/esp-idf/components/bootloader_support/include/esp_secure_boot.h:
 
-/Users/dan/esp/esp-idf/components/bootloader_support/include/esp_secure_boot.h:
+C:/esp32/esp-idf/components/esp32/include/soc/efuse_reg.h:
 
-/Users/dan/esp/esp-idf/components/soc/esp32/include/soc/efuse_reg.h:
+C:/esp32/esp-idf/components/esp32/include/soc/soc.h:
 
-/Users/dan/esp/esp-idf/components/soc/esp32/include/soc/soc.h:
+C:/esp32/esp-idf/components/bootloader_support/include/esp_flash_encrypt.h:
 
-/Users/dan/esp/esp-idf/components/bootloader_support/include/esp_flash_encrypt.h:
+C:/esp32/esp-idf/components/esp32/include/esp_attr.h:
 
-/Users/dan/esp/esp-idf/components/esp32/include/esp_attr.h:
+C:/esp32/esp-idf/components/app_update/include/esp_ota_ops.h:
 
-/Users/dan/esp/esp-idf/components/app_update/include/esp_ota_ops.h:
+C:/esp32/esp-idf/components/esp32/include/rom/queue.h:
 
-/Users/dan/esp/esp-idf/components/esp32/include/rom/queue.h:
+C:/esp32/esp-idf/components/esp32/include/rom/crc.h:
 
-/Users/dan/esp/esp-idf/components/esp32/include/rom/crc.h:
-
-/Users/dan/esp/esp-idf/components/soc/esp32/include/soc/dport_reg.h:
-
-/Users/dan/esp/esp-idf/components/log/include/esp_log.h:
+C:/esp32/esp-idf/components/log/include/esp_log.h:
