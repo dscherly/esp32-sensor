@@ -35,8 +35,9 @@
 #define TIMER_FINE_ADJ   (1.4*(TIMER_BASE_CLK / TIMER_DIVIDER)/1000000) /*!< used to compensate alarm value */
 #define TIMER_INTERVAL0_SEC   0.0166666666666666667//(0.02)   /*!< test interval for timer 0 */ sample rate of 60Hz
 #define TEST_WITHOUT_RELOAD   0   /*!< example of auto-reload mode */
-#define TEST_WITH_RELOAD   1      /*!< example without auto-reload mode */
+#define TEST_WITH_RELOAD   	1      /*!< example without auto-reload mode */
 #define DISABLE_INTERRUPT	2
+#define NODEID_CHANGE		3
 
 static const char *TAG = "adc";
 
@@ -103,18 +104,24 @@ void timer_evt_task(void *arg)
         if(evt.type == DISABLE_INTERRUPT) {
 
         	err = timer_pause(TIMER_GROUP_0, TIMER_0);
-            if(err != ESP_OK){
-            	ESP_LOGI(TAG,"timer_pause error: %d", err);
-            } else {
-            	ESP_LOGI(TAG,"timer paused");
-            }
+        	if(err != ESP_OK){
+        		ESP_LOGI(TAG,"timer_pause error: %d", err);
+        	} else {
+        		ESP_LOGI(TAG,"timer paused");
+        	}
 
-            err = timer_disable_intr(TIMER_GROUP_0, TIMER_0);
-            if(err != ESP_OK){
-            	ESP_LOGI(TAG,"timer_disable_intr error: %d", err);
-            } else {
-            	ESP_LOGI(TAG,"interrupt disabled");
-            }
+        	err = timer_disable_intr(TIMER_GROUP_0, TIMER_0);
+        	if(err != ESP_OK){
+        		ESP_LOGI(TAG,"timer_disable_intr error: %d", err);
+        	} else {
+        		ESP_LOGI(TAG,"interrupt disabled");
+        	}
+        } else if(evt.type == NODEID_CHANGE) {
+        	xEventGroupClearBits( globalPtrs->system_event_group, NEW_NODEID);
+        	if( !get_flash_uint8( &nodeid, "nodeid") ){
+        		nodeid = (uint8_t) DEFAULT_NODEID;
+        	}
+        	out->nodeid = nodeid;
         }
     }
 }
@@ -133,19 +140,16 @@ void IRAM_ATTR timer_group0_isr(void *para)
         TIMERG0.int_clr_timers.t0 = 1;
         uint64_t timer_val = ((uint64_t) TIMERG0.hw_timer[timer_idx].cnt_high) << 32 | TIMERG0.hw_timer[timer_idx].cnt_low;
 
-        if( (xEventGroupGetBits( globalPtrs->system_event_group ) & FW_UPDATING) > 0 ){
-//        	xEventGroupClearBits( globalPtrs->system_event_group, FW_UPDATING); //this will be cleared when OTA finishes
+        if( (xEventGroupGetBitsFromISR( globalPtrs->system_event_group ) & FW_UPDATING) > 0 ){
+//        	xEventGroupClearBitsFromISR( globalPtrs->system_event_group, FW_UPDATING); //this will be cleared when OTA finishes
         	evt.type = DISABLE_INTERRUPT;
         	xQueueSendFromISR(timer_queue, &evt, NULL);
         }
 
         //check if nodeid has been changed
-        if( (xEventGroupGetBits( globalPtrs->system_event_group ) & NEW_NODEID) > 0 ){
-        	xEventGroupClearBits( globalPtrs->system_event_group, NEW_NODEID);
-        	if( !get_flash_uint8( &nodeid, "nodeid") ){
-        		nodeid = (uint8_t) DEFAULT_NODEID;
-        	}
-        	out->nodeid = nodeid;
+        if( (xEventGroupGetBitsFromISR( globalPtrs->system_event_group ) & NEW_NODEID) > 0 ){
+        	evt.type = NODEID_CHANGE;
+        	xQueueSendFromISR(timer_queue, &evt, NULL);
         }
 
         //read adc data

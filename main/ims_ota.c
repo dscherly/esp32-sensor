@@ -62,20 +62,19 @@ void ota_start_task ( void *pvParameter ){
 		ESP_LOGI(TAG, "OTA successful");
 		xEventGroupClearBits( globalPtrs->system_event_group, FW_UPDATING); //inform other tasks that update was successful
 		xEventGroupSetBits( globalPtrs->system_event_group, FW_UPDATE_SUCCESS );
-		//vTaskDelay(2000/portTICK_PERIOD_MS); //delay to allow web interface to update
-		//esp_restart();
+		esp_restart();
 	}
 	else if( res == CRITICAL_FAIL ){
 		ESP_LOGE(TAG, "OTA critical fail");
 		xEventGroupClearBits( globalPtrs->system_event_group, FW_UPDATING); //inform other tasks that update failed
 		xEventGroupSetBits( globalPtrs->system_event_group, FW_UPDATE_CRITICAL_FAIL );
-		//vTaskDelay(2000/portTICK_PERIOD_MS); //delay to allow web interface to update
-		//esp_restart();
+		esp_restart();
 	}
 	else {
 		ESP_LOGE(TAG, "OTA fail");
 		xEventGroupClearBits( globalPtrs->system_event_group, FW_UPDATING); //inform other tasks that update failed
 		xEventGroupSetBits( globalPtrs->system_event_group, FW_UPDATE_FAIL );
+		esp_restart();	//TODO: do not restart on non-critical fail such as no connection. Implement later if gui used instead of web interface
 	}
 
 	(void)vTaskDelete(NULL);

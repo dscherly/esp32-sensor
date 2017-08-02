@@ -17,13 +17,13 @@ extern "C" {
 #include "freertos/event_groups.h"
 
 
-#define WIFI_SSID		"gzb-99507"//"XoSoft"
-#define WIFI_PASSWORD	"cd5h-6j1m-txga-fkga"//"123qweASD"
+#define WIFI_SSID		"XoSoft"//"gzb-99507"//
+#define WIFI_PASSWORD	"123qweASD"//"cd5h-6j1m-txga-fkga"//
 
-#define DEFAULT_LOCALIP 	"192.168.1.10" //"192.168.0.10"
+#define DEFAULT_LOCALIP 	"192.168.0.10"//"192.168.1.10" //
 #define DEFAULT_NETMASK 	"255.255.255.0"
-#define DEFAULT_GATEWAY 	"192.168.1.1"//"192.168.0.1"
-#define DEFAULT_REMOTEIP 	"192.168.1.201"//"192.168.0.101"
+#define DEFAULT_GATEWAY 	"192.168.0.1"//"192.168.1.1"//
+#define DEFAULT_REMOTEIP 	"192.168.0.101"//"192.168.1.201"//
 #define DEFAULT_NULLIP	 	"0.0.0.0"
 #define DEFAULT_NODEID		10
 #define DEFAULT_LOCALPORT 	16500

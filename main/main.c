@@ -83,7 +83,6 @@ void app_main(void) {
 
 	xTaskCreate(udp_main_task, "udp_main_task", 8192, (void *) &globalPtrs, 4, NULL);	//start udp task
 	xTaskCreate(tcp_task, "tcp_task", 8192, (void *) &globalPtrs, 4, NULL);				//start tcp task
-    //xTaskCreate(adc1_task, "adc1_task", 8192, (void *) &globalPtrs, 4, NULL);
 	adc_main((void *) &globalPtrs);
 
 	const esp_partition_t *boot_part = esp_ota_get_boot_partition();

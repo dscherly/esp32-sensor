@@ -19,6 +19,8 @@ void printListItems( List_t *socketList );
 int getMaxListValue( List_t *socketList );
 void parseRecvData(char *tcpbuffer, int nbytes, int socket);
 void sendReplyHTML(int socket);
+void send404ReplyHTML(int socket);
+void sendTestReplyHTML(int socket);
 void print_int_array(int *array, int size);
 void tcp_task( void *pvParameter );
 

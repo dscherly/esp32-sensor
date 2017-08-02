@@ -4,3 +4,11 @@ build/
 .settings/language.settings.xml
 .cproject
 sdkconfig.old
+build/main/main.o
+build/esp32_sensor.elf
+build/esp32_sensor.map
+build/main/ims_adc.o
+build/main/ims_ota.o
+build/main/ims_tcp.o
+build/main/libmain.a
+build/main/main.o

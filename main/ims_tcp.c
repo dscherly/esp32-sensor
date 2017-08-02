@@ -7,6 +7,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -39,10 +40,7 @@ global_ip_info_t globalIpInfo;	//all ip address and port info
 
 char submitStr[20] = "";
 char logbuttonstr[10] = "Start";
-char updateStr[40] = "";
-
-u32_t test;
-
+bool notfound = false;
 
 
 /*
@@ -307,6 +305,7 @@ void parseRecvData(char *tcpbuffer, int nbytes, int socket){
 					nodeid = tempInt;
 					set_flash_uint8( nodeid, "nodeid" );
 					strcpy(submitStr,"Settings updated<br>");
+					//ESP_LOGI(TAG,"new nodeid");
 					xEventGroupSetBits( globalPtrs->system_event_group, NEW_NODEID );
 				}
 				isnodeid = false;
@@ -322,6 +321,10 @@ void parseRecvData(char *tcpbuffer, int nbytes, int socket){
 					xTaskCreate(ota_start_task, "ota_start_task", 8196, (void *) globalPtrs, 10, NULL); //highest priority so that it isnt interrupted
 				}
 				isfwupdate = false;
+			}
+			else {
+				//e.g. if favicon request, send 404 not found
+				notfound = true;
 			}
 		}
 
@@ -348,7 +351,6 @@ void sendReplyHTML(int socket){
 	inet_ntop(AF_INET,&globalIpInfo.localIpInfo.netmask,nmbuf,20);
 	inet_ntop(AF_INET,&globalIpInfo.localIpInfo.gw,gwbuf,20);
 	inet_ntop(AF_INET,&globalIpInfo.remotes[0].ip,ripbuf0,20);
-
 
 	//reply with some html
 	sprintf(sendbuf, "\r\nHTTP/1.1 200 OK\r\n"
@@ -395,6 +397,21 @@ void sendReplyHTML(int socket){
 	strncpy(submitStr, "\0", 1);
 }
 
+
+/*
+ * Sends the a not found message to a browser
+ */
+void send404ReplyHTML(int socket){
+
+	char sendbuf[64] = { 0 };
+
+	sprintf(sendbuf, "\r\nHTTP/1.1 404 \r\n\r\n");
+	if (send(socket, sendbuf, sizeof(sendbuf), 0) == -1) { //this has to be sizeof the whole buffer
+		perror("send");
+	}
+	//printf("\n%s\n\n",sendbuf); //print sent data. TODO: comment out when not needed
+
+}
 
 //print a line containing array data
 void print_int_array(int *array, int size){
@@ -472,13 +489,12 @@ void tcp_task( void *pvParameter ){
 				//loop through all file descriptors in the list
 				for ( int aa = 0; aa < len; ++aa ){
 					ii = listGET_LIST_ITEM_VALUE( &tempItem );
-					ESP_LOGI(TAG,"checking socket %d",ii);
+					//ESP_LOGI(TAG,"checking socket %d",ii);
+
 					//if there is new data on a fd
 					if (FD_ISSET(ii, &tcpreadfds)) {
 						//new tcp connection request
-						ESP_LOGI(TAG,"new data, socket %d",ii);
 						if (ii == listener) {
-							ESP_LOGI(TAG,"new tcp connection on listener socket %d",ii);
 							addrlen = sizeof remoteaddr;
 							tcpChild = accept(listener,
 									(struct sockaddr * ) &remoteaddr,
@@ -488,7 +504,6 @@ void tcp_task( void *pvParameter ){
 								perror("accept");
 							else {
 								FD_SET(tcpChild, &tcpmaster);
-								ESP_LOGI(TAG,"new tcp connection created as socket %d",tcpChild);
 
 								//Create new listitem and set its value
 								ListItem_t *newListItem = malloc(sizeof(ListItem_t));
@@ -503,39 +518,36 @@ void tcp_task( void *pvParameter ){
 						} else {
 							//read bytes from a client
 							if ((nbytes = recv(ii, tcpbuffer, sizeof(tcpbuffer), 0)) <= 0) {
-								ESP_LOGI(TAG,"fd set but no data on connection, socket %d",ii);
 								//got error or connection closed by client
-								if(nbytes < 0){
+								if(nbytes < 0)
 									perror("recvfrom failed");
-									//close connection
-									close(ii);
-									FD_CLR(ii, &tcpmaster);
-									removeListItemWithValue( &socketList, ii);
-									fdmax = getMaxListValue( &socketList );
-								}
 							}
 							else {
-								ESP_LOGI(TAG,"data received, socket %d",ii);
 								//some data received
 								tcpbuffer[nbytes + 1] = '\0';
-								printf("\n%s\n\n",tcpbuffer); //TODO remove this
+//								printf("\n%s\n\n",tcpbuffer); //print received data. TODO: comment out when not needed
 
 								parseRecvData(tcpbuffer, nbytes, ii);
-								sendReplyHTML(ii);
+//								sendReplyHTML(ii);
+
+								if (notfound){
+									send404ReplyHTML(ii);
+									notfound = false;
+								} else{
+									sendReplyHTML(ii);
+								}
 
 								if( (xEventGroupGetBits( globalPtrs->wifi_event_group ) & (NEW_LOCALIP | NEW_NETMASK | NEW_GATEWAY )) > 0 ){
-									//close connection
-									close(ii);
-									FD_CLR(ii, &tcpmaster);
-									removeListItemWithValue( &socketList, ii);
-									fdmax = getMaxListValue( &socketList );
 									//restart wifi if there are new ip addresses
 									xEventGroupClearBits( globalPtrs->wifi_event_group, (NEW_LOCALIP | NEW_NETMASK | NEW_GATEWAY ));
 									init_wifi();
 								}
-
 							}
-
+							//close connection
+							close(ii);
+							FD_CLR(ii, &tcpmaster);
+							removeListItemWithValue( &socketList, ii);
+							fdmax = getMaxListValue( &socketList );
 						}
 					}
 					tempItem = *(ListItem_t *)listGET_NEXT( &tempItem );
@@ -544,56 +556,21 @@ void tcp_task( void *pvParameter ){
 				//check if a firmware update has been completed
 				if( (xEventGroupGetBits( globalPtrs->system_event_group ) & FW_UPDATE_SUCCESS ) > 0 ){
 					xEventGroupClearBits( globalPtrs->system_event_group, ( FW_UPDATE_SUCCESS ));
-					strcpy(updateStr,"Update successful, restarting...<br>");
-					ESP_LOGI(TAG,"OTA successful, restarting...");
-
-					//loop through all file descriptors in the list
-					tempItem = *(ListItem_t *) listGET_HEAD_ENTRY( &socketList );	//get first item in the list
-					//tempItem = *(ListItem_t *)listGET_NEXT( &tempItem );			//ignore the listener
-					for ( int aa = 0; aa < len; ++aa ){
-						ii = listGET_LIST_ITEM_VALUE( &tempItem );
-						ESP_LOGI(TAG,"replying to socket: %d", ii);
-						sendReplyHTML(ii);
-						tempItem = *(ListItem_t *)listGET_NEXT( &tempItem );
-					}
-
-					//TODO: emit message to web interface and close connection
-
-					esp_restart();
+//					ESP_LOGI(TAG,"OTA successful, restarting...");
+//					esp_restart();
 				}
 				else if( (xEventGroupGetBits( globalPtrs->system_event_group ) & FW_UPDATE_FAIL ) > 0 ){
 					xEventGroupClearBits( globalPtrs->system_event_group, ( FW_UPDATE_FAIL ));
-					strcpy(updateStr,"Update failed, try again.<br>");
-					ESP_LOGE(TAG,"OTA failed, try again.");
-					//TODO: emit message to web interface
-					//loop through all file descriptors in the list
-					tempItem = *(ListItem_t *) listGET_HEAD_ENTRY( &socketList );	//get first item in the list
-					//tempItem = *(ListItem_t *)listGET_NEXT( &tempItem );			//ignore the listener
-					for ( int aa = 0; aa < len; ++aa ){
-						ii = listGET_LIST_ITEM_VALUE( &tempItem );
-						ESP_LOGI(TAG,"replying to socket: %d", ii);
-						sendReplyHTML(ii);
-						tempItem = *(ListItem_t *)listGET_NEXT( &tempItem );
-					}
+//					ESP_LOGE(TAG,"OTA failed, try again.");
+					//restart adc timer and interrupt
 				}
 				else if( (xEventGroupGetBits( globalPtrs->system_event_group ) & FW_UPDATE_CRITICAL_FAIL ) > 0 ){
 					xEventGroupClearBits( globalPtrs->system_event_group, ( FW_UPDATE_CRITICAL_FAIL ));
-					strcpy(updateStr,"Update failed, restarting...<br>");
-					ESP_LOGE(TAG,"OTA failed, restarting...");
-					//TODO: emit message to web interface and close connection
-					//loop through all file descriptors in the list
-					tempItem = *(ListItem_t *) listGET_HEAD_ENTRY( &socketList );	//get first item in the list
-					//tempItem = *(ListItem_t *)listGET_NEXT( &tempItem );			//ignore the listener
-					for ( int aa = 0; aa < len; ++aa ){
-						ii = listGET_LIST_ITEM_VALUE( &tempItem );
-						ESP_LOGI(TAG,"replying to socket: %d", ii);
-						sendReplyHTML(ii);
-						tempItem = *(ListItem_t *)listGET_NEXT( &tempItem );
-					}
-					esp_restart();
+//					ESP_LOGE(TAG,"OTA failed, restarting...");
+//					esp_restart();
 				}
 
-				vTaskDelay(pdMS_TO_TICKS(20)); //delay to reduce processor load
+				vTaskDelay(pdMS_TO_TICKS(10)); //delay to reduce processor load
 			}
 		}
 		vTaskDelay(pdMS_TO_TICKS(50));
