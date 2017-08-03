@@ -178,12 +178,9 @@ void udp_tx_task(void *pvParameter){
 	outbuf[15]= (uint8_t) 69;
 
 	for(;;){
-		//data placed in the uart_rx queue is read here and transmitted over the udp socket
 		if(xQueueReceive( globalPtrs->udp_tx_q, &in, pdMS_TO_TICKS(5000))) {
-			//if new uart data is available. if UDP isnt enabled, packet is lost
 			if((xEventGroupGetBits(globalPtrs->wifi_event_group ) & UDP_ENABLED)) {
 				//normal running, send data over UDP
-
 				outbuf[1] =	in.nodeid;
 				outbuf[2] = in.counter;
 				outbuf[3] = in.counter >> 8;

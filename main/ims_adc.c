@@ -126,6 +126,7 @@ void timer_evt_task(void *arg)
     }
 }
 
+
 /*
  * @brief timer group0 ISR handler
  */

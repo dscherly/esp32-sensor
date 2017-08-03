@@ -40,6 +40,7 @@ global_ip_info_t globalIpInfo;	//all ip address and port info
 
 char submitStr[20] = "";
 char logbuttonstr[10] = "Start";
+char calibrateStr[10] = "Start";
 bool notfound = false;
 
 
@@ -190,6 +191,7 @@ void parseRecvData(char *tcpbuffer, int nbytes, int socket){
 	int islocalport0 = false;
 	int isnodeid = false;
 	int isfwupdate = false;
+	int iscalibrate = false;
 	tcpip_adapter_ip_info_t tempIpInfo;
 
 	strcpy(str, tcpbuffer);
@@ -322,6 +324,22 @@ void parseRecvData(char *tcpbuffer, int nbytes, int socket){
 				}
 				isfwupdate = false;
 			}
+			else if(strcmp(pch, "calibrate") == 0){		//a new remote ip address is entered
+				iscalibrate = true;
+			}
+			else if(iscalibrate){
+				if(strcmp(pch, "Start") == 0){
+					strcpy(calibrateStr, "Stop");
+					xEventGroupSetBits( globalPtrs->system_event_group, CALIBRATE_START ); //TODO, create task to catch events such as this to set button text - see ims_adc.c
+//					xTaskCreate(calibrate_start_task, "calibrate_start_task", 4096, (void *) globalPtrs, 10, NULL); //highest priority so that it isnt interrupted
+				}
+				else if(strcmp(pch, "Stop") == 0){
+					strcpy(calibrateStr, "Start");
+					xEventGroupSetBits( globalPtrs->system_event_group, CALIBRATE_STOP ); //TODO, create task to catch events such as this to set button text - see ims_adc.c
+//					xTaskCreate(calibrate_start_task, "calibrate_start_task", 4096, (void *) globalPtrs, 10, NULL); //highest priority so that it isnt interrupted
+				}
+				iscalibrate = false;
+			}
 			else {
 				//e.g. if favicon request, send 404 not found
 				notfound = true;
@@ -381,6 +399,12 @@ void sendReplyHTML(int socket){
 			"<font color=\"green\">%s</font>\n"
 			"<input type=\"submit\" value=\"Save\">\n"
 			"</form>\n"
+			"<h3>Calibrate sensors</h3>\n"
+			"<form action=\"\" method=\"get\">\n"
+			"Click start, let the patient walk for a few steps and then click stop to calibrate the sensors for one foot<br>\n"
+			"<input type=\"hidden\" name=\"calibrate\" value=\"%s\">"
+			"<br><input type=\"submit\" onclick=\"calibrate\" value=\"%s\">\n"
+			"</form>\n"
 			"<h3>Firmware update</h3>\n"
 			"<form action=\"\" method=\"get\">\n"
 			"Update firmware? <input type=\"checkbox\" name=\"fwupdate\"><br>To update: Start an http server on port 8070 in the directory with the new .bin file<br>(e.g. python -m SimpleHTTPServer 8070)<br>\n"
@@ -388,7 +412,7 @@ void sendReplyHTML(int socket){
 			"</form>\n"
 			"<p></p>\n"
 			"<form action=\"\"><input type=\"submit\" value=\"Refresh page\">\n"
-			"</form></body></html>\r\n", nodeid, ipbuf, ripbuf0, nmbuf, globalIpInfo.remotes[0].localPort, gwbuf, globalIpInfo.remotes[0].remotePort, submitStr);
+			"</form></body></html>\r\n", nodeid, ipbuf, ripbuf0, nmbuf, globalIpInfo.remotes[0].localPort, gwbuf, globalIpInfo.remotes[0].remotePort, submitStr, calibrateStr, calibrateStr);
 	if (send(socket, sendbuf, sizeof(sendbuf), 0) == -1) { //this has to be sizeof the whole buffer
 		perror("send");
 	}
@@ -525,7 +549,7 @@ void tcp_task( void *pvParameter ){
 							else {
 								//some data received
 								tcpbuffer[nbytes + 1] = '\0';
-//								printf("\n%s\n\n",tcpbuffer); //print received data. TODO: comment out when not needed
+								printf("\n%s\n\n",tcpbuffer); //print received data. TODO: comment out when not needed
 
 								parseRecvData(tcpbuffer, nbytes, ii);
 //								sendReplyHTML(ii);
@@ -554,6 +578,7 @@ void tcp_task( void *pvParameter ){
 				}
 
 				//check if a firmware update has been completed
+				//TODO: leaving this here for eventual update to show update progress in web interface or standalone app
 				if( (xEventGroupGetBits( globalPtrs->system_event_group ) & FW_UPDATE_SUCCESS ) > 0 ){
 					xEventGroupClearBits( globalPtrs->system_event_group, ( FW_UPDATE_SUCCESS ));
 //					ESP_LOGI(TAG,"OTA successful, restarting...");

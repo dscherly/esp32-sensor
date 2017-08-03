@@ -56,6 +56,9 @@ extern "C" {
 #define FW_UPDATE_SUCCESS 		BIT2
 #define FW_UPDATE_FAIL 			BIT3
 #define FW_UPDATE_CRITICAL_FAIL	BIT4
+#define CALIBRATE_START			BIT5
+#define CALIBRATE_STOP			BIT6
+
 #define NUMREMOTES 1	//Maximum number of UDP remotes
 
 typedef struct udp_connection {
@@ -80,7 +83,6 @@ typedef struct {
 	EventGroupHandle_t wifi_event_group;
 	EventGroupHandle_t system_event_group;
 	QueueHandle_t udp_tx_q;
-	//uint8_t nodeid;
 } globalptrs_t;
 
 #ifdef __cplusplus
