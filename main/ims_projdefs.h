@@ -55,8 +55,7 @@ extern "C" {
 #define FW_UPDATE_SUCCESS 		BIT2
 #define FW_UPDATE_FAIL 			BIT3
 #define FW_UPDATE_CRITICAL_FAIL	BIT4
-#define CALIBRATE_START			BIT5
-#define CALIBRATE_STOP			BIT6
+#define CALIBRATING				BIT5
 
 //bit masks for ADC data byte
 #define ADC0 0
@@ -65,7 +64,6 @@ extern "C" {
 #define ADC3 3
 
 #define NUMREMOTES 1	//Maximum number of UDP remotes
-//#define THRESHOLD 0.15
 
 uint8_t threshold;
 
@@ -82,7 +80,7 @@ typedef struct global_ip_info {
 
 typedef struct {
 	uint8_t nodeid;
-	uint32_t counter;	//TODO change to uint8
+	uint8_t counter;
 	int size;					//number of bytes of valid data
 	uint16_t data[ADCBUFSIZE];	//data array
 } adc_data_t;

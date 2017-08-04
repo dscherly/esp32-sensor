@@ -37,70 +37,67 @@
 static const char *TAG = "shoesensor";
 
 globalptrs_t *globalPtrs;
-udp_sensor_data_t out;
+adc_data_t *in;
+udp_sensor_data_t *out;
 uint16_t max[ADCBUFSIZE];
 uint16_t min[ADCBUFSIZE];
 uint16_t thresh[ADCBUFSIZE];
 bool calibrate_running = false;
-
 
 /*
  * Task to calibrate and process sensor measurements.
  * After calibration, measurements are sent to UDP class for transmission
  */
 void sensor_eval_task(void *arg) {
-	adc_data_t in;
-	char tmp[10];
+
 
 	for(;;){
-		if(xQueueReceive( globalPtrs->adc_q, &in, pdMS_TO_TICKS(2000))) {
-			ESP_LOGI(TAG,"data:%d,%d,%d,%d", in.data[0],in.data[1],in.data[2],in.data[3]);
-			if((xEventGroupGetBits(globalPtrs->system_event_group ) & CALIBRATE_START)) {
+		if(xQueueReceive( globalPtrs->adc_q, in, pdMS_TO_TICKS(2000))) {
+//			ESP_LOGI(TAG,"recv nodeid: %d, counter: %d", in->nodeid, in->counter);
+//			ESP_LOGI(TAG,"data:%d,%d,%d,%d thresh:%d,%d,%d,%d", in.data[0],in.data[1],in.data[2],in.data[3],thresh[0],thresh[1],thresh[2],thresh[3]);
+			if((xEventGroupGetBits(globalPtrs->system_event_group ) & CALIBRATING) > 0) {
 				if(!calibrate_running) {
-					memset( max, 0x00, sizeof(uint16_t)*ADCBUFSIZE );
+					//reset all calibration arrays
 					for (int ii = 0; ii < ADCBUFSIZE; ++ii ){
-						min [ii] = 65535;
+						max [ii] = 0;
+						min [ii] = 0xFFFF;
+						thresh[ii] = 0xFFFF;
 					}
-					memset( thresh, 0x00, sizeof(uint16_t)*ADCBUFSIZE );
 					calibrate_running = true;
 				}
 
 				//calibrate mode running
 				for(int ii = 0; ii < ADCBUFSIZE; ++ii) {
-					if(in.data[ii] > max[ii])
-						max[ii] = in.data[ii];
-					else if(in.data[ii] < min[ii])
-						min[ii] = in.data[ii];
+					if(in->data[ii] > max[ii])
+						max[ii] = in->data[ii];
+					else if(in->data[ii] < min[ii])
+						min[ii] = in->data[ii];
 //					ESP_LOGI(TAG,"data:%d,%d,%d,%d max:%d,%d,%d,%d  min:%d,%d,%d,%d", in.data[0],in.data[1],in.data[2],in.data[3],max[0],max[1],max[2],max[3],min[0],min[1],min[2],min[3]);
 				}
 				//TODO send raw data?
 			}
-			else if((xEventGroupGetBits(globalPtrs->system_event_group ) & CALIBRATE_STOP)) {
+			else {
 				if(calibrate_running) {
 					calibrate_running = false;
-					ESP_LOGI(TAG,"max:%d,%d,%d,%d  min:%d,%d,%d,%d",max[0],max[1],max[2],max[3],min[0],min[1],min[2],min[3]);
+//					ESP_LOGI(TAG,"max:%d,%d,%d,%d  min:%d,%d,%d,%d",max[0],max[1],max[2],max[3],min[0],min[1],min[2],min[3]);
 					//calculate threshold
 					for(int ii = 0; ii < ADCBUFSIZE; ++ii) {
 						thresh[ii] = (uint16_t)(((float) (max[ii] - min[ii])) * ((float)threshold / 100) ) + min[ii];
 					}
-					ESP_LOGI(TAG,"thresh:%d,%d,%d,%d",thresh[0],thresh[1],thresh[2],thresh[3]);
-				} //else {
-					//calibration not running, apply threshold to sensor values and send to udp task
-//					for(int aa = 0; aa < ADCBUFSIZE; aa++) {
-//						ESP_LOGI(TAG,"in.data[%d]=%d, thresh[%d]=%d",aa,in.data[aa],aa,thresh[aa]);
-////						if( in.data[aa] > thresh[aa] ){
-////							//						out.data = ( 1 << ii ) | out.data;	//enable bit in data byte
-////							//						tmp[ii] = '1';
-////						}
-////						else {
-////							//						out.data = ~(1 << ii) & (out.data) ;	//boolean operation to disable bit in data byte
-////							//						tmp[ii] = '0';
-////						}
-//					}
-					//				ESP_LOGI(TAG,"tmp: %s", tmp);
-					//				ESP_LOGI(TAG,"sensor data byte: %c%c%c%c%c%c%c%c", BYTE_TO_BINARY(out.data));
+//					ESP_LOGI(TAG,"thresh:%d,%d,%d,%d",thresh[0],thresh[1],thresh[2],thresh[3]);
+				}
+				//calibration not running, apply threshold to sensor values and send to udp task
+				out->data = 0;
+				for(int jj = 0; jj < ADCBUFSIZE; jj++){
+					if(in->data[jj] > thresh[jj]){
+						out->data |= ( 1 << jj );	//enable a bit if the sensor measurement is above the threshold
+					}
+				}
+//				ESP_LOGI(TAG,"%c%c%c%c%c%c%c%c", BYTE_TO_BINARY(out->data));
+				out->nodeid = in->nodeid;
+				out->counter = in->counter;
 
-				//}
+				xQueueSend( globalPtrs->udp_tx_q, (void *) out, ( TickType_t ) 0); //dont wait if queue is full
 			}
 		}
 	}
@@ -112,6 +109,13 @@ void sensor_eval_task(void *arg) {
 void sensor_main(void* arg)
 {
 	globalPtrs = (globalptrs_t *) arg;
+	out = (udp_sensor_data_t *) malloc (sizeof(udp_sensor_data_t));
+	in = (adc_data_t *) malloc (sizeof(adc_data_t));
+
+	//init the threshold array to max values
+	for(int ii = 0; ii < ADCBUFSIZE; ii++){
+		thresh[ii] = 0xFFFF;
+	}
 
     xTaskCreate(sensor_eval_task, "sensor_eval_task", 4096, NULL, 5, NULL);
 }

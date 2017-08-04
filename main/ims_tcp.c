@@ -337,14 +337,14 @@ void parseRecvData(char *tcpbuffer, int nbytes, int socket){
 			else if(iscalibrate){
 				if(strcmp(pch, "Start") == 0){
 					strcpy(calibrateStr, "Stop");
-					xEventGroupClearBits( globalPtrs->system_event_group, CALIBRATE_STOP );
-					xEventGroupSetBits( globalPtrs->system_event_group, CALIBRATE_START ); //TODO, create task to catch events such as this to set button text - see ims_adc.c
+//					xEventGroupClearBits( globalPtrs->system_event_group, CALIBRATE_STOP );
+					xEventGroupSetBits( globalPtrs->system_event_group, CALIBRATING ); //TODO, create task to catch events such as this to set button text - see ims_adc.c
 //					xTaskCreate(calibrate_start_task, "calibrate_start_task", 4096, (void *) globalPtrs, 10, NULL); //highest priority so that it isnt interrupted
 				}
 				else if(strcmp(pch, "Stop") == 0){
 					strcpy(calibrateStr, "Start");
-					xEventGroupClearBits( globalPtrs->system_event_group, CALIBRATE_START );
-					xEventGroupSetBits( globalPtrs->system_event_group, CALIBRATE_STOP ); //TODO, create task to catch events such as this to set button text - see ims_adc.c
+					xEventGroupClearBits( globalPtrs->system_event_group, CALIBRATING );
+//					xEventGroupSetBits( globalPtrs->system_event_group, CALIBRATE_STOP ); //TODO, create task to catch events such as this to set button text - see ims_adc.c
 //					xTaskCreate(calibrate_start_task, "calibrate_start_task", 4096, (void *) globalPtrs, 10, NULL); //highest priority so that it isnt interrupted
 				}
 				iscalibrate = false;

@@ -14,6 +14,8 @@ void timer_evt_task(void* arg);
 void IRAM_ATTR timer_group0_isr(void *para);
 void adc_main(void* arg);
 
+adc_data_t *adc_out;
+
 
 #ifdef __cplusplus
 }

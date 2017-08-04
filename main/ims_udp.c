@@ -171,29 +171,44 @@ uint8_t getCRC(uint8_t *in, int len){
  */
 
 void udp_tx_task(void *pvParameter){
-	adc_data_t in;
-	uint8_t outbuf[sizeof(in.nodeid) + sizeof(in.counter) + sizeof(in.data) + 3];
-
-	outbuf[0] = (uint8_t) 83;
-	outbuf[15]= (uint8_t) 69;
+	udp_sensor_data_t in;
+	uint8_t outbuf[6];
+	uint8_t msg_id = 0x00;
 
 	for(;;){
 		if(xQueueReceive( globalPtrs->udp_tx_q, &in, pdMS_TO_TICKS(5000))) {
 			if((xEventGroupGetBits(globalPtrs->wifi_event_group ) & UDP_ENABLED)) {
 				//normal running, send data over UDP
-				outbuf[1] =	in.nodeid;
-				outbuf[2] = in.counter;
-				outbuf[3] = in.counter >> 8;
-				outbuf[4] = in.counter >> 16;
-				outbuf[5] = in.counter >> 24;
-				for (int ii = 0; ii < sizeof(in.data); ii++){
-					outbuf[6 + ii] = *((uint8_t *)in.data + ii);
-				}
-				outbuf[14] = getCRC(&outbuf[0], sizeof(outbuf));
+				outbuf[0] = 0x53;				//start byte
+				outbuf[1] =	1;					//length
+				outbuf[2] = in.nodeid + msg_id;	//msg_id
+				outbuf[3] = in.counter;			//counter
+				outbuf[4] = in.data;			//data
+				outbuf[5] = getCRC(&outbuf[0], sizeof(outbuf));
+
 				sendto(udpParams.udpConnection[0].socket, outbuf, sizeof(outbuf), 0, (struct sockaddr * ) &udpParams.udpConnection[0].udpRemote, sizeof(udpParams.udpConnection[0].udpRemote));
 				udpParams.idlecount = 0;
 			}
 		}
+//		adc_data_t in;
+//		uint8_t outbuf[sizeof(in.nodeid) + sizeof(in.counter) + sizeof(in.data) + 3];
+//		//Send raw sensor data over udp
+//		if(xQueueReceive( globalPtrs->udp_tx_q, &in, pdMS_TO_TICKS(5000))) {
+//			if((xEventGroupGetBits(globalPtrs->wifi_event_group ) & UDP_ENABLED)) {
+//				//normal running, send data over UDP
+//				outbuf[1] =	in.nodeid;
+//				outbuf[2] = in.counter;
+//				outbuf[3] = in.counter >> 8;
+//				outbuf[4] = in.counter >> 16;
+//				outbuf[5] = in.counter >> 24;
+//				for (int ii = 0; ii < sizeof(in.data); ii++){
+//					outbuf[6 + ii] = *((uint8_t *)in.data + ii);
+//				}
+//				outbuf[14] = getCRC(&outbuf[0], sizeof(outbuf));
+//				sendto(udpParams.udpConnection[0].socket, outbuf, sizeof(outbuf), 0, (struct sockaddr * ) &udpParams.udpConnection[0].udpRemote, sizeof(udpParams.udpConnection[0].udpRemote));
+//				udpParams.idlecount = 0;
+//			}
+//		}
 
 		udpParams.idlecount++;
 

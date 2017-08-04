@@ -38,6 +38,7 @@
 #define TEST_WITH_RELOAD   	1      /*!< example without auto-reload mode */
 #define DISABLE_INTERRUPT	2
 #define NODEID_CHANGE		3
+#define DEBUG				4
 
 static const char *TAG = "adc";
 
@@ -51,8 +52,7 @@ typedef struct {
 
 
 globalptrs_t *globalPtrs;
-adc_data_t *out;
-uint8_t nodeid;
+//uint8_t nodeid;
 
 xQueueHandle timer_queue;
 
@@ -118,10 +118,11 @@ void timer_evt_task(void *arg)
         	}
         } else if(evt.type == NODEID_CHANGE) {
         	xEventGroupClearBits( globalPtrs->system_event_group, NEW_NODEID);
-        	if( !get_flash_uint8( &nodeid, "nodeid") ){
-        		nodeid = (uint8_t) DEFAULT_NODEID;
+        	if( !get_flash_uint8( &(adc_out->nodeid), "nodeid") ){
+        		adc_out->nodeid = (uint8_t) DEFAULT_NODEID;
         	}
-        	out->nodeid = nodeid;
+        } else if (evt.type == DEBUG) {
+//        	ESP_LOGI(TAG,"nodeid = %d, counter = %d", adc_out->nodeid, adc_out->counter);
         }
     }
 }
@@ -152,13 +153,13 @@ void IRAM_ATTR timer_group0_isr(void *para)
         }
 
         //read adc data
-        out->data[0] =  (uint16_t) adc1_get_voltage(ADC1_CH4);
-        out->data[1] =  (uint16_t) adc1_get_voltage(ADC1_CH5);
-        out->data[2] =  (uint16_t) adc1_get_voltage(ADC1_CH6);
-        out->data[3] =  (uint16_t) adc1_get_voltage(ADC1_CH7);
+        adc_out->data[0] =  (uint16_t) adc1_get_voltage(ADC1_CH6);
+        adc_out->data[1] =  (uint16_t) adc1_get_voltage(ADC1_CH7);
+        adc_out->data[2] =  (uint16_t) adc1_get_voltage(ADC1_CH4);
+        adc_out->data[3] =  (uint16_t) adc1_get_voltage(ADC1_CH5);
 
-        xQueueSendFromISR( globalPtrs->adc_q, (void *) out, ( TickType_t ) 0); //dont wait if queue is full
-        out->counter++;
+        xQueueSendFromISR( globalPtrs->adc_q, (void *) adc_out, ( TickType_t ) 0); //dont wait if queue is full
+        adc_out->counter++;
 
         /*For a timer that will not reload, we need to set the next alarm value each time. */
         timer_val += (uint64_t) (TIMER_INTERVAL0_SEC * (TIMER_BASE_CLK / TIMERG0.hw_timer[timer_idx].config.divider));
@@ -189,15 +190,16 @@ void adc_main(void* arg)
 	adc1_config_channel_atten(ADC1_CH6,ADC_ATTEN_11db);
 	adc1_config_channel_atten(ADC1_CH7,ADC_ATTEN_11db);
 
-	if( !get_flash_uint8( &nodeid, "nodeid") ){
-		nodeid = (uint8_t) DEFAULT_NODEID;
+	adc_out = (adc_data_t *) malloc (sizeof(adc_data_t));
+
+	if( !get_flash_uint8( &(adc_out->nodeid), "nodeid") ){
+		adc_out->nodeid = (uint8_t) DEFAULT_NODEID;
 	}
 
-	out = (adc_data_t *) malloc (sizeof(adc_data_t));
+	adc_out->size = sizeof(adc_out->data);
+	adc_out->counter = 0;
 
-	out->nodeid = nodeid;
-	out->size = sizeof(out->data);
-	out->counter = 0;
+//	ESP_LOGI(TAG,"nodeid: %d, counter:%d",adc_out->nodeid, adc_out->counter);
 
 	timer_queue = xQueueCreate(10, sizeof(timer_event_t));
 	tg0_timer0_init();
