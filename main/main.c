@@ -37,6 +37,7 @@
 #include "ims_tcp.h"
 #include "ims_udp.h"
 #include "ims_adc.h"
+#include "ims_sensorshoe.h"
 
 static const char *TAG = "main";
 
@@ -73,6 +74,7 @@ void app_main(void) {
     globalPtrs.wifi_event_group = xEventGroupCreate();
     globalPtrs.system_event_group = xEventGroupCreate();
     globalPtrs.udp_tx_q = xQueueCreate(10, sizeof(adc_data_t));
+    globalPtrs.adc_q = xQueueCreate(10, sizeof(adc_data_t));
 
 	ESP_ERROR_CHECK(esp_event_loop_init(event_handler, NULL));
 
@@ -84,6 +86,7 @@ void app_main(void) {
 	xTaskCreate(udp_main_task, "udp_main_task", 8192, (void *) &globalPtrs, 4, NULL);	//start udp task
 	xTaskCreate(tcp_task, "tcp_task", 8192, (void *) &globalPtrs, 4, NULL);				//start tcp task
 	adc_main((void *) &globalPtrs);
+	sensor_main((void *) &globalPtrs);
 
 	const esp_partition_t *boot_part = esp_ota_get_boot_partition();
 	ESP_LOGI(TAG, "boot partition label: %s", boot_part->label)

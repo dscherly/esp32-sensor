@@ -30,6 +30,7 @@ extern "C" {
 #define DEFAULT_REMOTEPORT	16501
 #define HTTP_PORT			"8070"
 #define FW_FILENAME			"/esp32_sensor.bin"
+#define DEFAULT_THRESHOLD 	15
 
 #define TCPPORT 80
 #define BUFSIZE 1024
@@ -47,8 +48,6 @@ extern "C" {
 #define NEW_LOCALPORT  	BIT6
 #define WIFI_READY		BIT7
 #define UDP_ENABLED  	BIT8
-//#define NEW_NODEID		BIT9
-//#define FW_UPDATING		BIT10
 
 //system event group bitmasks for other system-related parameters
 #define NEW_NODEID 				BIT0
@@ -59,7 +58,16 @@ extern "C" {
 #define CALIBRATE_START			BIT5
 #define CALIBRATE_STOP			BIT6
 
+//bit masks for ADC data byte
+#define ADC0 0
+#define ADC1 1
+#define ADC2 2
+#define ADC3 3
+
 #define NUMREMOTES 1	//Maximum number of UDP remotes
+//#define THRESHOLD 0.15
+
+uint8_t threshold;
 
 typedef struct udp_connection {
 	ip4_addr_t ip;
@@ -74,15 +82,22 @@ typedef struct global_ip_info {
 
 typedef struct {
 	uint8_t nodeid;
-	uint32_t counter;
+	uint32_t counter;	//TODO change to uint8
 	int size;					//number of bytes of valid data
 	uint16_t data[ADCBUFSIZE];	//data array
 } adc_data_t;
 
 typedef struct {
+	uint8_t nodeid;
+	uint8_t counter;
+	uint8_t data;
+} udp_sensor_data_t;
+
+typedef struct {
 	EventGroupHandle_t wifi_event_group;
 	EventGroupHandle_t system_event_group;
 	QueueHandle_t udp_tx_q;
+	QueueHandle_t adc_q;
 } globalptrs_t;
 
 #ifdef __cplusplus

@@ -142,12 +142,10 @@ void IRAM_ATTR timer_group0_isr(void *para)
         uint64_t timer_val = ((uint64_t) TIMERG0.hw_timer[timer_idx].cnt_high) << 32 | TIMERG0.hw_timer[timer_idx].cnt_low;
 
         if( (xEventGroupGetBitsFromISR( globalPtrs->system_event_group ) & FW_UPDATING) > 0 ){
-//        	xEventGroupClearBitsFromISR( globalPtrs->system_event_group, FW_UPDATING); //this will be cleared when OTA finishes
         	evt.type = DISABLE_INTERRUPT;
         	xQueueSendFromISR(timer_queue, &evt, NULL);
         }
 
-        //check if nodeid has been changed
         if( (xEventGroupGetBitsFromISR( globalPtrs->system_event_group ) & NEW_NODEID) > 0 ){
         	evt.type = NODEID_CHANGE;
         	xQueueSendFromISR(timer_queue, &evt, NULL);
@@ -159,7 +157,7 @@ void IRAM_ATTR timer_group0_isr(void *para)
         out->data[2] =  (uint16_t) adc1_get_voltage(ADC1_CH6);
         out->data[3] =  (uint16_t) adc1_get_voltage(ADC1_CH7);
 
-        xQueueSendFromISR( globalPtrs->udp_tx_q, (void *) out, ( TickType_t ) 0); //dont wait if queue is full
+        xQueueSendFromISR( globalPtrs->adc_q, (void *) out, ( TickType_t ) 0); //dont wait if queue is full
         out->counter++;
 
         /*For a timer that will not reload, we need to set the next alarm value each time. */

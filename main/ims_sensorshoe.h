@@ -1,6 +1,6 @@
 
-#ifndef __IMS_SHOESENSOR_H__
-#define __IMS_SHOESENSOR_H__
+#ifndef __IMS_SENSORSHOE_H__
+#define __IMS_SENSORSHOE_H__
 
 #ifdef __cplusplus
 extern "C" {
@@ -14,4 +14,4 @@ void sensor_main(void* arg);
 }
 #endif
 
-#endif /* __IMS_SHOESENSOR_H__ */
+#endif /* __IMS_SENSORSHOE_H__ */
