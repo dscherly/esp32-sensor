@@ -55,7 +55,13 @@ void sensor_eval_task(void *arg) {
 		if(xQueueReceive( globalPtrs->adc_q, in, pdMS_TO_TICKS(2000))) {
 //			ESP_LOGI(TAG,"recv nodeid: %d, counter: %d", in->nodeid, in->counter);
 //			ESP_LOGI(TAG,"data:%d,%d,%d,%d thresh:%d,%d,%d,%d", in.data[0],in.data[1],in.data[2],in.data[3],thresh[0],thresh[1],thresh[2],thresh[3]);
-			if((xEventGroupGetBits(globalPtrs->system_event_group ) & CALIBRATING) > 0) {
+
+			//If raw data mode is set, send raw adc data directly over udp
+			if((xEventGroupGetBits(globalPtrs->system_event_group ) & SEND_RAW_DATA_ONLY) > 0) {
+				xQueueSend( globalPtrs->udp_tx_q, (void *) in, ( TickType_t ) 0); //dont wait if queue is full
+			}
+
+			else if((xEventGroupGetBits(globalPtrs->system_event_group ) & CALIBRATING) > 0) {
 				if(!calibrate_running) {
 					//reset all calibration arrays
 					for (int ii = 0; ii < ADCBUFSIZE; ++ii ){

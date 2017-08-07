@@ -171,44 +171,86 @@ uint8_t getCRC(uint8_t *in, int len){
  */
 
 void udp_tx_task(void *pvParameter){
+	adc_data_t in_raw;
+	uint8_t outbuf_raw[13];
 	udp_sensor_data_t in;
 	uint8_t outbuf[6];
 	uint8_t msg_id = 0x00;
 
 	for(;;){
+		if(xQueuePeek( globalPtrs->udp_tx_q, &in_raw, pdMS_TO_TICKS(5000))) {
+			if((xEventGroupGetBits(globalPtrs->wifi_event_group ) & UDP_ENABLED )) {
+				//receive raw sensor data
+				if((xEventGroupGetBits(globalPtrs->system_event_group ) & SEND_RAW_DATA_ONLY ) > 0) {
+					xQueueReceive( globalPtrs->udp_tx_q, &in_raw, 0);
+					outbuf_raw[0] =	0x53;
+					outbuf_raw[1] = 10;
+					outbuf_raw[2] =	in_raw.nodeid;
+					outbuf_raw[3] = in_raw.counter;
+					for (int ii = 0; ii < sizeof(in_raw.data); ii++){
+						outbuf_raw[4 + ii] = *((uint8_t *)in_raw.data + ii);
+					}
+					outbuf_raw[12] = getCRC(&outbuf_raw[0], sizeof(outbuf_raw));
+
+					sendto(udpParams.udpConnection[0].socket, outbuf_raw, sizeof(outbuf_raw), 0, (struct sockaddr * ) &udpParams.udpConnection[0].udpRemote, sizeof(udpParams.udpConnection[0].udpRemote));
+					udpParams.idlecount = 0;
+				}
+				//receive calibrated sensor data
+				else if((xEventGroupGetBits(globalPtrs->system_event_group ) & SEND_RAW_DATA_ONLY ) == 0) {
+					xQueueReceive( globalPtrs->udp_tx_q, &in, 0);
+					outbuf[0] = 0x53;				//start byte
+					outbuf[1] =	3;					//length
+					outbuf[2] = in.nodeid + msg_id;	//msg_id
+					outbuf[3] = in.counter;			//counter
+					outbuf[4] = in.data;			//data
+					outbuf[5] = getCRC(&outbuf[0], sizeof(outbuf));
+
+					sendto(udpParams.udpConnection[0].socket, outbuf, sizeof(outbuf), 0, (struct sockaddr * ) &udpParams.udpConnection[0].udpRemote, sizeof(udpParams.udpConnection[0].udpRemote));
+					udpParams.idlecount = 0;
+				}
+			}
+		}
+
+		udpParams.idlecount++;
+
+		//keep the wifi connection alive, send a packet every 120 seconds (@ 1000hz tick rate)
+		if(udpParams.idlecount >= 24){
+			ESP_LOGI(TAG, "wifi keep-alive");
+			udpParams.idlecount = 0;
+			if(xEventGroupGetBits( globalPtrs->wifi_event_group ) & (UDP_ENABLED)) {
+				//send a zero integer
+				sendto(udpParams.udpConnection[0].socket, &udpParams.idlecount, sizeof(int), 0, (struct sockaddr * ) &udpParams.udpConnection[0].udpRemote, sizeof(udpParams.udpConnection[0].udpRemote));
+			}
+		}
+	}
+}
+
+/*
+ * Send data over udp only to primary remote
+ */
+
+void udp_tx_rawdata_task(void *pvParameter){
+
+	adc_data_t in;
+	uint8_t outbuf[sizeof(in.nodeid) + sizeof(in.counter) + sizeof(in.data) + 3];
+
+	for(;;){
 		if(xQueueReceive( globalPtrs->udp_tx_q, &in, pdMS_TO_TICKS(5000))) {
 			if((xEventGroupGetBits(globalPtrs->wifi_event_group ) & UDP_ENABLED)) {
 				//normal running, send data over UDP
-				outbuf[0] = 0x53;				//start byte
-				outbuf[1] =	1;					//length
-				outbuf[2] = in.nodeid + msg_id;	//msg_id
-				outbuf[3] = in.counter;			//counter
-				outbuf[4] = in.data;			//data
-				outbuf[5] = getCRC(&outbuf[0], sizeof(outbuf));
-
+				outbuf[1] =	in.nodeid;
+				outbuf[2] = in.counter;
+				outbuf[3] = in.counter >> 8;
+				outbuf[4] = in.counter >> 16;
+				outbuf[5] = in.counter >> 24;
+				for (int ii = 0; ii < sizeof(in.data); ii++){
+					outbuf[6 + ii] = *((uint8_t *)in.data + ii);
+				}
+				outbuf[14] = getCRC(&outbuf[0], sizeof(outbuf));
 				sendto(udpParams.udpConnection[0].socket, outbuf, sizeof(outbuf), 0, (struct sockaddr * ) &udpParams.udpConnection[0].udpRemote, sizeof(udpParams.udpConnection[0].udpRemote));
 				udpParams.idlecount = 0;
 			}
 		}
-//		adc_data_t in;
-//		uint8_t outbuf[sizeof(in.nodeid) + sizeof(in.counter) + sizeof(in.data) + 3];
-//		//Send raw sensor data over udp
-//		if(xQueueReceive( globalPtrs->udp_tx_q, &in, pdMS_TO_TICKS(5000))) {
-//			if((xEventGroupGetBits(globalPtrs->wifi_event_group ) & UDP_ENABLED)) {
-//				//normal running, send data over UDP
-//				outbuf[1] =	in.nodeid;
-//				outbuf[2] = in.counter;
-//				outbuf[3] = in.counter >> 8;
-//				outbuf[4] = in.counter >> 16;
-//				outbuf[5] = in.counter >> 24;
-//				for (int ii = 0; ii < sizeof(in.data); ii++){
-//					outbuf[6 + ii] = *((uint8_t *)in.data + ii);
-//				}
-//				outbuf[14] = getCRC(&outbuf[0], sizeof(outbuf));
-//				sendto(udpParams.udpConnection[0].socket, outbuf, sizeof(outbuf), 0, (struct sockaddr * ) &udpParams.udpConnection[0].udpRemote, sizeof(udpParams.udpConnection[0].udpRemote));
-//				udpParams.idlecount = 0;
-//			}
-//		}
 
 		udpParams.idlecount++;
 
