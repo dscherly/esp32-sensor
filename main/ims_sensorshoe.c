@@ -20,7 +20,6 @@
 #include "soc/timer_group_struct.h"
 #include "sdkconfig.h"
 #include "esp_log.h"
-#include "ims_projdefs.h"
 #include "ims_nvs.h"
 
 #define BYTE_TO_BINARY_PATTERN "%c%c%c%c%c%c%c%c"
@@ -39,9 +38,6 @@ static const char *TAG = "shoesensor";
 globalptrs_t *globalPtrs;
 adc_data_t *in;
 udp_sensor_data_t *out;
-uint16_t max[ADCBUFSIZE];
-uint16_t min[ADCBUFSIZE];
-uint16_t thresh[ADCBUFSIZE];
 bool calibrate_running = false;
 
 /*
@@ -49,7 +45,6 @@ bool calibrate_running = false;
  * After calibration, measurements are sent to UDP class for transmission
  */
 void sensor_eval_task(void *arg) {
-
 
 	for(;;){
 		if(xQueueReceive( globalPtrs->adc_q, in, pdMS_TO_TICKS(2000))) {
@@ -80,17 +75,23 @@ void sensor_eval_task(void *arg) {
 						min[ii] = in->data[ii];
 //					ESP_LOGI(TAG,"data:%d,%d,%d,%d max:%d,%d,%d,%d  min:%d,%d,%d,%d", in.data[0],in.data[1],in.data[2],in.data[3],max[0],max[1],max[2],max[3],min[0],min[1],min[2],min[3]);
 				}
-				//TODO send raw data?
 			}
 			else {
-				if(calibrate_running) {
+				if(calibrate_running || ((xEventGroupGetBits(globalPtrs->system_event_group) & NEW_THRESHOLD) > 0)) {
 					calibrate_running = false;
-//					ESP_LOGI(TAG,"max:%d,%d,%d,%d  min:%d,%d,%d,%d",max[0],max[1],max[2],max[3],min[0],min[1],min[2],min[3]);
+					xEventGroupClearBits(globalPtrs->system_event_group, NEW_THRESHOLD);
+					set_flash_uint8( threshold, "threshold" );
+					//ESP_LOGI(TAG,"max:%d,%d,%d,%d  min:%d,%d,%d,%d",max[0],max[1],max[2],max[3],min[0],min[1],min[2],min[3]);
 					//calculate threshold
+					//ESP_LOGI(TAG, "End calibration or threshold change: threshold = %d", threshold);
+					float temp_thresh = (float)threshold / 100;
 					for(int ii = 0; ii < ADCBUFSIZE; ++ii) {
-						thresh[ii] = (uint16_t)(((float) (max[ii] - min[ii])) * ((float)threshold / 100) ) + min[ii];
+						thresh[ii] = (uint16_t)(((float) (max[ii] - min[ii])) * temp_thresh) + min[ii];
 					}
-//					ESP_LOGI(TAG,"thresh:%d,%d,%d,%d",thresh[0],thresh[1],thresh[2],thresh[3]);
+					ESP_LOGI(TAG,"thresh:%d,%d,%d,%d",thresh[0],thresh[1],thresh[2],thresh[3]);
+
+					//TODO: save max, min and thresh values to flash
+					storeCalibration();
 				}
 				//calibration not running, apply threshold to sensor values and send to udp task
 				out->data = 0;
@@ -109,6 +110,61 @@ void sensor_eval_task(void *arg) {
 	}
 }
 
+
+/*
+ * Get measurement arrays from flash so that recalibration isnt necessary each time
+ */
+void initShoeSensor(void){
+	char str[10] = "";
+	for(int ii = 0; ii < ADCBUFSIZE; ii++){
+		sprintf(str, "max%d", ii);
+		if( !get_flash_uint16( &max[ii], str) ){
+			max[ii] = 0;
+			set_flash_uint16( max[ii], str);
+		}
+		sprintf(str, "min%d", ii);
+		if( !get_flash_uint16( &min[ii], str) ){
+			min[ii] = 0xFFFF;
+			set_flash_uint16( min[ii], str);
+		}
+		sprintf(str, "thresh%d", ii);
+		if( !get_flash_uint16( &thresh[ii], str) ){
+			thresh[ii] = 0xFFFF;
+			set_flash_uint16( thresh[ii], str);
+		}
+	}
+
+	return;
+}
+
+/*
+ * Store calibration values to flash
+ */
+void storeCalibration(void){
+	char str[10] = "";
+	for(int ii = 0; ii < ADCBUFSIZE; ii++){
+		sprintf(str, "max%d", ii);
+		if( !set_flash_uint16( max[ii], str) ){
+			ESP_LOGE(TAG,"Error saving calibration item (max[%d]) to flash",ii);
+		}
+		vTaskDelay(pdMS_TO_TICKS(5));
+
+		sprintf(str, "min%d", ii);
+		if( !set_flash_uint16( min[ii], str) ){
+			ESP_LOGE(TAG,"Error saving calibration item (min[%d]) to flash",ii);
+		}
+		vTaskDelay(pdMS_TO_TICKS(5));
+
+		sprintf(str, "thresh%d", ii);
+		if( !set_flash_uint16( thresh[ii], str) ){
+			ESP_LOGE(TAG,"Error saving calibration item (thresh[%d]) to flash",ii);
+		}
+		vTaskDelay(pdMS_TO_TICKS(5));
+	}
+
+	return;
+}
+
 /**
  * @brief Main function for shoe sensor class
  */
@@ -118,10 +174,8 @@ void sensor_main(void* arg)
 	out = (udp_sensor_data_t *) malloc (sizeof(udp_sensor_data_t));
 	in = (adc_data_t *) malloc (sizeof(adc_data_t));
 
-	//init the threshold array to max values
-	for(int ii = 0; ii < ADCBUFSIZE; ii++){
-		thresh[ii] = 0xFFFF;
-	}
+	//init the measurement arrays
+	initShoeSensor();
 
     xTaskCreate(sensor_eval_task, "sensor_eval_task", 4096, NULL, 5, NULL);
 }

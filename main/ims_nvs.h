@@ -18,6 +18,9 @@ bool erase_flash_key( const char *label );
 bool set_flash_uint32( uint32_t ip, const char *label );
 bool get_flash_uint32( uint32_t *ip, const char *label );
 
+bool set_flash_uint16( uint16_t value, const char *label );
+bool get_flash_uint16( uint16_t *value, const char *label );
+
 bool set_flash_uint8( uint8_t value, const char *label );
 bool get_flash_uint8( uint8_t *value, const char *label );
 

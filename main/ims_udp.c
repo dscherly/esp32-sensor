@@ -183,10 +183,10 @@ void udp_tx_task(void *pvParameter){
 				//receive raw sensor data
 				if((xEventGroupGetBits(globalPtrs->system_event_group ) & SEND_RAW_DATA_ONLY ) > 0) {
 					xQueueReceive( globalPtrs->udp_tx_q, &in_raw, 0);
-					outbuf_raw[0] =	0x53;
-					outbuf_raw[1] = 10;
-					outbuf_raw[2] =	in_raw.nodeid;
-					outbuf_raw[3] = in_raw.counter;
+					outbuf_raw[0] =	0x53;			//start byte
+					outbuf_raw[1] = 10; 			//length
+					outbuf_raw[2] =	in_raw.nodeid;	//node id
+					outbuf_raw[3] = in_raw.counter;	//counter
 					for (int ii = 0; ii < sizeof(in_raw.data); ii++){
 						outbuf_raw[4 + ii] = *((uint8_t *)in_raw.data + ii);
 					}

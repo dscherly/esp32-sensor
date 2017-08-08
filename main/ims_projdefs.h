@@ -57,6 +57,7 @@ extern "C" {
 #define FW_UPDATE_CRITICAL_FAIL	BIT4
 #define CALIBRATING				BIT5
 #define SEND_RAW_DATA_ONLY		BIT6
+#define NEW_THRESHOLD			BIT7
 
 //bit masks for ADC data byte
 #define ADC0 0

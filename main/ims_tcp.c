@@ -359,8 +359,8 @@ void parseRecvData(char *tcpbuffer, int nbytes, int socket){
 				uint8_t tmp = (uint8_t) atoi(pch);
 				if(threshold != tmp){
 					threshold = tmp;
-					set_flash_uint8( threshold, "threshold" );
-					//strcpy(submitStr,"Settings updated<br>");
+					xEventGroupSetBits( globalPtrs->system_event_group, NEW_THRESHOLD );
+//					ESP_LOGI(TAG,"test before crash1");
 				}
 				isthreshold = false;
 			}
@@ -439,18 +439,24 @@ void sendReplyHTML(int socket){
 			"<font color=\"green\">%s</font>\n"
 			"<input type=\"submit\" value=\"Save\">\n"
 			"</form>\n"
-			"<h3>Calibrate sensors</h3>\n"
+
 			"<form action=\"\" method=\"get\">\n"
-			"Click start, let the patient walk for a few steps and then click stop to calibrate the sensors for one foot<br>\n"
+			"Sensor calibration:&nbsp;\n"
 			"<input type=\"hidden\" name=\"calibrate\" value=\"%s\">"
-			"<p>Threshold:&nbsp;<input name=\"threshold\" type=\"number\" min=\"0\" max=\"100\" value=\"%d\" />%%\n"
-			"<br><input type=\"submit\" onclick=\"calibrate\" value=\"%s\">\n"
+			"<input type=\"submit\" value=\"%s\">\n"
 			"</form>\n"
-			"<h3>Transmit raw sensor data only</h3>\n"
+
 			"<form action=\"\" method=\"get\">\n"
+			"<p>Threshold:&nbsp;<input name=\"threshold\" type=\"number\" min=\"0\" max=\"100\" value=\"%d\" size=\"8\"/>&nbsp;%%\n"
+			"<input type=\"submit\" value=\"set\">\n"
+			"</form>\n"
+
+			"<form action=\"\" method=\"get\">\n"
+			"Transmit raw sensor data only:&nbsp;\n"
 			"<input type=\"hidden\" name=\"rawdata\" value=\"%s\">"
 			"<input type=\"submit\" onclick=\"rawdata\" value=\"%s\">\n"
 			"</form>\n"
+
 			"<h3>Firmware update</h3>\n"
 			"<form action=\"\" method=\"get\">\n"
 			"Update firmware? <input type=\"checkbox\" name=\"fwupdate\"><br>To update: Start an http server on port 8070 in the directory with the new .bin file<br>(e.g. python -m SimpleHTTPServer 8070)<br>\n"
@@ -458,7 +464,7 @@ void sendReplyHTML(int socket){
 			"</form>\n"
 			"<p></p>\n"
 			"<form action=\"\"><input type=\"submit\" value=\"Refresh page\">\n"
-			"</form></body></html>\r\n", nodeid, ipbuf, ripbuf0, nmbuf, globalIpInfo.remotes[0].localPort, gwbuf, globalIpInfo.remotes[0].remotePort, submitStr, calibrateStr, threshold, calibrateStr, sendRawDataStr, sendRawDataStr);
+			"</form></body></html>\r\n", nodeid, ipbuf, ripbuf0, nmbuf, globalIpInfo.remotes[0].localPort, gwbuf, globalIpInfo.remotes[0].remotePort, submitStr, calibrateStr, calibrateStr, threshold, sendRawDataStr, sendRawDataStr);
 	if (send(socket, sendbuf, sizeof(sendbuf), 0) == -1) { //this has to be sizeof the whole buffer
 		perror("send");
 	}

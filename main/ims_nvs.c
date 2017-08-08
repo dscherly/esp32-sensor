@@ -162,6 +162,57 @@ bool set_flash_str( char *str, const char *label ){
 }
 
 /*
+ * get a 16bit value address from flash
+ */
+bool get_flash_uint16( uint16_t *value, const char *label ){
+	nvs_handle my_handle;
+	esp_err_t err = nvs_open(label, NVS_READWRITE, &my_handle);
+
+	if (err != ESP_OK) {
+		ESP_LOGE(TAG,"Error (%d) opening NVS handle!", err);
+	} else {
+		err = nvs_get_u16(my_handle, label, value);
+
+		switch (err) {
+		case ESP_OK:
+			return true;
+		case ESP_ERR_NVS_NOT_FOUND:
+//			ESP_LOGI(TAG,"The value \"%s\" is not initialized yet", label);
+			break;
+		default :
+			ESP_LOGE(TAG,"Error (%d) reading\n", err);
+			break;
+		}
+	}
+	return false;
+}
+
+/*
+ * Set variables in non-volatile memory
+ */
+bool set_flash_uint16( uint16_t value, const char *label ){
+	nvs_handle my_handle;
+	esp_err_t err = nvs_open(label, NVS_READWRITE, &my_handle);
+
+
+	if (err != ESP_OK) {
+		ESP_LOGE(TAG,"Error (%d) opening NVS handle!", err);
+	} else {
+		//write
+		err = nvs_set_u16(my_handle, label, value);
+
+		switch (err) {
+		case ESP_OK:
+			return true;
+		default :
+			ESP_LOGE(TAG,"Error (%d) writing to flash", err);
+			break;
+		}
+	}
+	return false;
+}
+
+/*
  * get an 8bit value address from flash
  */
 bool get_flash_uint8( uint8_t *value, const char *label ){
@@ -198,7 +249,6 @@ bool set_flash_uint8( uint8_t value, const char *label ){
 		ESP_LOGE(TAG,"Error (%d) opening NVS handle!", err);
 	} else {
 		//write
-		//ESP_LOGI(TAG,"Writing to flash: %s", label);
 		err = nvs_set_u8(my_handle, label, value);
 
 		switch (err) {

@@ -6,9 +6,17 @@
 extern "C" {
 #endif
 
+#include "ims_projdefs.h"
+
 void sensor_eval_task(void* arg);
 void sensor_main(void* arg);
+void initShoeSensor(void);
+void storeCalibration(void);
 
+
+uint16_t max[ADCBUFSIZE];
+uint16_t min[ADCBUFSIZE];
+uint16_t thresh[ADCBUFSIZE];
 
 #ifdef __cplusplus
 }
