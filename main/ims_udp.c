@@ -159,7 +159,7 @@ uint8_t getCRC(uint8_t *in, int len){
 	x = *(in+1) ^ *(in+2);
 
 	//ignore end byte
-	for ( int ii = 3; ii < len - 2; ii++){
+	for ( int ii = 3; ii < len - 1; ii++){
 		x = x ^ *(in + ii);
 	}
 
