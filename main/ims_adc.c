@@ -11,6 +11,7 @@
 #include "freertos/task.h"
 #include "freertos/queue.h"
 #include "freertos/event_groups.h"
+#include "freertos/ringbuf.h"
 #include "driver/gpio.h"
 #include "driver/adc.h"
 #include "driver/periph_ctrl.h"
@@ -39,6 +40,8 @@
 #define DISABLE_INTERRUPT	2
 #define NODEID_CHANGE		3
 #define DEBUG				4
+#define MERGESORT			5
+#define MED_FILT_WINDOW_SIZE	5
 
 static const char *TAG = "adc";
 
@@ -52,8 +55,13 @@ typedef struct {
 
 
 globalptrs_t *globalPtrs;
-//uint8_t nodeid;
 
+uint16_t a[MED_FILT_WINDOW_SIZE];
+uint16_t b[MED_FILT_WINDOW_SIZE];
+uint16_t adc6_filter[MED_FILT_WINDOW_SIZE];
+uint16_t adc7_filter[MED_FILT_WINDOW_SIZE];
+uint16_t adc4_filter[MED_FILT_WINDOW_SIZE];
+uint16_t adc5_filter[MED_FILT_WINDOW_SIZE];
 xQueueHandle timer_queue;
 
 /*
@@ -123,6 +131,8 @@ void timer_evt_task(void *arg)
         	}
         } else if (evt.type == DEBUG) {
 //        	ESP_LOGI(TAG,"nodeid = %d, counter = %d", adc_out->nodeid, adc_out->counter);
+//        	ESP_LOGI(TAG,"adc0_filter: %d %d %d", adc0_filter[0], adc0_filter[1], adc0_filter[2]);
+//        	ESP_LOGI(TAG,"b: %d %d %d", b[0], b[1], b[2]);
         }
     }
 }
@@ -152,11 +162,17 @@ void IRAM_ATTR timer_group0_isr(void *para)
         	xQueueSendFromISR(timer_queue, &evt, NULL);
         }
 
-        //read adc data
-        adc_out->data[0] =  (uint16_t) adc1_get_voltage(ADC1_CH6);
-        adc_out->data[1] =  (uint16_t) adc1_get_voltage(ADC1_CH7);
-        adc_out->data[2] =  (uint16_t) adc1_get_voltage(ADC1_CH4);
-        adc_out->data[3] =  (uint16_t) adc1_get_voltage(ADC1_CH5);
+        //read adc data and send raw values
+        //        adc_out->data[0] =  (uint16_t) adc1_get_voltage(ADC1_CH6);
+        //        adc_out->data[1] =  (uint16_t) adc1_get_voltage(ADC1_CH7);
+        //        adc_out->data[2] =  (uint16_t) adc1_get_voltage(ADC1_CH4);
+        //        adc_out->data[3] =  (uint16_t) adc1_get_voltage(ADC1_CH5);
+
+        //read adc data and send median filtered values
+        adc_out->data[0] = median_filter((uint16_t) adc1_get_voltage(ADC1_CH6), adc6_filter);
+        adc_out->data[1] = median_filter((uint16_t) adc1_get_voltage(ADC1_CH7), adc7_filter);
+        adc_out->data[2] = median_filter((uint16_t) adc1_get_voltage(ADC1_CH4), adc4_filter);
+        adc_out->data[3] = median_filter((uint16_t) adc1_get_voltage(ADC1_CH5), adc5_filter);
 
         xQueueSendFromISR( globalPtrs->adc_q, (void *) adc_out, ( TickType_t ) 0); //dont wait if queue is full
         adc_out->counter++;
@@ -175,6 +191,80 @@ void IRAM_ATTR timer_group0_isr(void *para)
     }
 }
 
+/*
+ * Add new value to the array and return a median filtered value
+ */
+uint16_t median_filter(uint16_t val, uint16_t *array){
+	int middle_idx = (MED_FILT_WINDOW_SIZE-1)/2;
+
+	//shift all values left
+	for( int ii = 0; ii < (MED_FILT_WINDOW_SIZE-1); ii++ ){
+		array[ii] = array[ii + 1];
+	}
+
+	//add new value to the end
+	array[MED_FILT_WINDOW_SIZE - 1] = val;
+
+	//sort the array and get the median value
+	array[middle_idx] = getMedianValue(array);
+
+	//return middle value index = (n-1)/2
+	return array[middle_idx];
+}
+
+uint16_t getMedianValue(uint16_t *in) {
+
+   //make a copy of the array to be sorted
+   for(int ii = 0; ii < MED_FILT_WINDOW_SIZE; ii++){
+	   a[ii] = in[ii];
+   }
+
+   //clear sort result array
+   for(int ii = 0; ii < MED_FILT_WINDOW_SIZE; ii++){
+	   b[ii] = 0;
+   }
+
+   //perform merge sort on the input array
+   mergesort(0, MED_FILT_WINDOW_SIZE-1, a, b);
+
+   //return the middle value in the sorted array
+   return a[(MED_FILT_WINDOW_SIZE-1)/2];
+}
+
+void merging(int low, int mid, int high, uint16_t *a, uint16_t *b) {
+   int l1, l2, i;
+
+   for(l1 = low, l2 = mid + 1, i = low; l1 <= mid && l2 <= high; i++) {
+      if(a[l1] <= a[l2])
+         b[i] = a[l1++];
+      else
+         b[i] = a[l2++];
+   }
+
+   while(l1 <= mid)
+      b[i++] = a[l1++];
+
+   while(l2 <= high)
+      b[i++] = a[l2++];
+
+   for(i = low; i <= high; i++)
+      a[i] = b[i];
+}
+
+void mergesort(int low, int high, uint16_t *a, uint16_t *b) {
+   int mid;
+
+   if(low < high) {
+      mid = (low + high) / 2;
+      mergesort(low, mid, a, b);
+      mergesort(mid+1, high, a, b);
+      merging(low, mid, high, a, b);
+   } else {
+      return;
+   }
+}
+
+
 
 /**
  * @brief In this test, we will test hardware timer0 and timer1 of timer group0.
@@ -182,6 +272,14 @@ void IRAM_ATTR timer_group0_isr(void *para)
 void adc_main(void* arg)
 {
 	globalPtrs = (globalptrs_t *) arg;
+
+	//initialise ring buffer for median filter
+	for(int ii = 0; ii < MED_FILT_WINDOW_SIZE; ii++){
+		adc6_filter[ii] = 0;
+		adc7_filter[ii] = 0;
+		adc4_filter[ii] = 0;
+		adc5_filter[ii] = 0;
+	}
 
 	// initialize ADC
 	adc1_config_width(ADC_WIDTH_12Bit);

@@ -16,6 +16,10 @@ void adc_main(void* arg);
 
 adc_data_t *adc_out;
 
+uint16_t median_filter(uint16_t val, uint16_t *array);
+uint16_t getMedianValue(uint16_t *a);
+void merging(int low, int mid, int high, uint16_t *a, uint16_t *b);
+void mergesort(int low, int high, uint16_t *a, uint16_t *b);
 
 #ifdef __cplusplus
 }

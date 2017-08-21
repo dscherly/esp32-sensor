@@ -184,7 +184,7 @@ void udp_tx_task(void *pvParameter){
 				if((xEventGroupGetBits(globalPtrs->system_event_group ) & SEND_RAW_DATA_ONLY ) > 0) {
 					xQueueReceive( globalPtrs->udp_tx_q, &in_raw, 0);
 					outbuf_raw[0] =	0x53;			//start byte
-					outbuf_raw[1] = 10; 			//length
+					outbuf_raw[1] = 9; 			//length
 					outbuf_raw[2] =	in_raw.nodeid;	//node id
 					outbuf_raw[3] = in_raw.counter;	//counter
 					for (int ii = 0; ii < sizeof(in_raw.data); ii++){
@@ -199,7 +199,7 @@ void udp_tx_task(void *pvParameter){
 				else if((xEventGroupGetBits(globalPtrs->system_event_group ) & SEND_RAW_DATA_ONLY ) == 0) {
 					xQueueReceive( globalPtrs->udp_tx_q, &in, 0);
 					outbuf[0] = 0x53;				//start byte
-					outbuf[1] =	3;					//length
+					outbuf[1] =	2;					//length
 					outbuf[2] = in.nodeid + msg_id;	//msg_id
 					outbuf[3] = in.counter;			//counter
 					outbuf[4] = in.data;			//data
