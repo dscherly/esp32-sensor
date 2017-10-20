@@ -130,6 +130,7 @@ void timer_evt_task(void *arg)
         		adc_out->nodeid = (uint8_t) DEFAULT_NODEID;
         	}
         } else if (evt.type == DEBUG) {
+        	xEventGroupClearBits( globalPtrs->system_event_group, DEBUG);
 //        	ESP_LOGI(TAG,"nodeid = %d, counter = %d", adc_out->nodeid, adc_out->counter);
 //        	ESP_LOGI(TAG,"adc0_filter: %d %d %d", adc0_filter[0], adc0_filter[1], adc0_filter[2]);
 //        	ESP_LOGI(TAG,"b: %d %d %d", b[0], b[1], b[2]);

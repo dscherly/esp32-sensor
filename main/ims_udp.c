@@ -182,13 +182,17 @@ void udp_tx_task(void *pvParameter){
 			if((xEventGroupGetBits(globalPtrs->wifi_event_group ) & UDP_ENABLED )) {
 				//receive raw sensor data
 				if((xEventGroupGetBits(globalPtrs->system_event_group ) & SEND_RAW_DATA_ONLY ) > 0) {
+					int ii = 0, ii_0 = 0;
+					int data_pnt_offset = 0;
 					xQueueReceive( globalPtrs->udp_tx_q, &in_raw, 0);
-					outbuf_raw[0] =	0x53;			//start byte
-					outbuf_raw[1] = 9; 			//length
-					outbuf_raw[2] =	in_raw.nodeid;	//node id
-					outbuf_raw[3] = in_raw.counter;	//counter
-					for (int ii = 0; ii < sizeof(in_raw.data); ii++){
-						outbuf_raw[4 + ii] = *((uint8_t *)in_raw.data + ii);
+					outbuf_raw[ii++] = 0x53;			//start byte
+					outbuf_raw[ii++] = 9; 				//length
+					outbuf_raw[ii++] = in_raw.nodeid;	//node id
+					outbuf_raw[ii++] = in_raw.counter;	//counter
+					ii_0 = ii;
+					for (; ii < (ii_0 + sizeof(in_raw.data)); ii++){
+						outbuf_raw[ii] = *((uint8_t *)in_raw.data + data_pnt_offset);
+						data_pnt_offset++;
 					}
 					outbuf_raw[12] = getCRC(&outbuf_raw[0], sizeof(outbuf_raw));
 

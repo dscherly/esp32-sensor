@@ -82,6 +82,7 @@ void app_main(void) {
     init_wifi();
 
 	xEventGroupWaitBits( globalPtrs.wifi_event_group, CONNECTED_BIT, false, true, pdMS_TO_TICKS( portMAX_DELAY ) );	//wait for wifi to connect
+	xEventGroupSetBits( globalPtrs.system_event_group, SEND_RAW_DATA_ONLY );
 
 	xTaskCreate(udp_main_task, "udp_main_task", 8192, (void *) &globalPtrs, 4, NULL);	//start udp task
 	xTaskCreate(tcp_task, "tcp_task", 8192, (void *) &globalPtrs, 4, NULL);				//start tcp task

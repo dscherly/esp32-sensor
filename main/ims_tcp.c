@@ -200,6 +200,7 @@ void parseRecvData(char *tcpbuffer, int nbytes, int socket){
 	int iscalibrate = false;
 	int isthreshold = false;
 	int israwdata = false;
+	int iscalright = false;
 	tcpip_adapter_ip_info_t tempIpInfo;
 
 	strcpy(str, tcpbuffer);
@@ -380,6 +381,18 @@ void parseRecvData(char *tcpbuffer, int nbytes, int socket){
 				israwdata = false;
 			}
 
+			else if(strcmp(pch, "calibrate_right") == 0){		//raw data button pressed
+				iscalright = true;
+			}
+			else if(iscalright){
+
+				//read calibration values from input
+				//set event group flag
+				//set global threshold values in projdefs
+				iscalright = false;
+			}
+
+
 			else {
 				//e.g. if favicon request, send 404 not found
 				notfound = true;
@@ -411,7 +424,7 @@ void sendReplyHTML(int socket){
 	inet_ntop(AF_INET,&globalIpInfo.remotes[0].ip,ripbuf0,20);
 
 	//reply with some html
-	sprintf(sendbuf, "\r\nHTTP/1.1 200 OK\r\n"
+	sprintf(sendbuf, "HTTP/1.1 200 OK\r\n"
 			"Content-Type: text/html\r\n\r\n"
 			"<html>\n"
 			"<head>\n"
@@ -442,19 +455,19 @@ void sendReplyHTML(int socket){
 
 			"<form action=\"\" method=\"get\">\n"
 			"Sensor calibration:&nbsp;\n"
-			"<input type=\"hidden\" name=\"calibrate\" value=\"%s\">"
-			"<input type=\"submit\" value=\"%s\">\n"
+			"<input type=\"hidden\" name=\"calibrate\" value=\"%s\" disabled=\"disabled\">"
+			"<input type=\"submit\" value=\"%s\" disabled=\"disabled\">\n"
 			"</form>\n"
 
 			"<form action=\"\" method=\"get\">\n"
-			"<p>Threshold:&nbsp;<input name=\"threshold\" type=\"number\" min=\"0\" max=\"100\" value=\"%d\" size=\"8\"/>&nbsp;%%\n"
-			"<input type=\"submit\" value=\"set\">\n"
+			"<p>Threshold:&nbsp;<input name=\"threshold\" type=\"number\" min=\"0\" max=\"100\" value=\"%d\"  disabled=\"disabled\" size=\"8\"/>&nbsp;%%\n"
+			"<input type=\"submit\" value=\"set\" disabled=\"disabled\">\n"
 			"</form>\n"
 
 			"<form action=\"\" method=\"get\">\n"
 			"Transmit raw sensor data only:&nbsp;\n"
-			"<input type=\"hidden\" name=\"rawdata\" value=\"%s\">"
-			"<input type=\"submit\" onclick=\"rawdata\" value=\"%s\">\n"
+			"<input type=\"hidden\" name=\"rawdata\" value=\"%s\" disabled=\"disabled\">"
+			"<input type=\"submit\" onclick=\"rawdata\" value=\"%s\" disabled=\"disabled\">\n"
 			"</form>\n"
 
 			"<h3>Firmware update</h3>\n"
