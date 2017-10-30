@@ -131,8 +131,8 @@ bool connect_to_http_server()
 	struct timeval tv;
 
 
-    ESP_LOGI(TAG, "Server IP: %s Server Port:%s", DEFAULT_REMOTEIP, HTTP_PORT);
-    sprintf(http_request, "GET %s HTTP/1.1\r\nHost: %s:%s \r\n\r\n", FW_FILENAME, DEFAULT_REMOTEIP, HTTP_PORT);
+    ESP_LOGI(TAG, "Server IP: %s Server Port:%s", DEFAULT_OTASERVER, HTTP_PORT);
+    sprintf(http_request, "GET %s HTTP/1.1\r\nHost: %s:%s \r\n\r\n", FW_FILENAME, DEFAULT_OTASERVER, HTTP_PORT);
 
     int  http_connect_flag = -1;
     struct sockaddr_in sock_info;
@@ -151,7 +151,7 @@ bool connect_to_http_server()
     // set connect info
     memset(&sock_info, 0, sizeof(struct sockaddr_in));
     sock_info.sin_family = AF_INET;
-    sock_info.sin_addr.s_addr = inet_addr(DEFAULT_REMOTEIP);
+    sock_info.sin_addr.s_addr = inet_addr(DEFAULT_OTASERVER);
     sock_info.sin_port = htons(atoi(HTTP_PORT));
 
 

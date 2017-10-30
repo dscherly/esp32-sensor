@@ -23,7 +23,6 @@
 #include "ims_adc.h"
 #include "ims_nvs.h"
 
-
 #define ADC1_CH4 (4)
 #define ADC1_CH5 (5)
 #define ADC1_CH6 (6)
