@@ -89,6 +89,7 @@ bool init_UDP() {
 	uint32_t temp, localip;
 	char tempstr[20];
 	int err;
+	int broadcast = 1;
 	fdmax = -1;
 
 	FD_ZERO(&master);    // clear the master and temp sets
@@ -162,6 +163,15 @@ bool init_UDP() {
 			ESP_LOGI(TAG, "UDP socket (%d:%d) open",udpParams.udpConnection[ii].socket, ntohs(udpParams.udpConnection[ii].udpLocal.sin_port));
 		}
 
+		//for 0 socket which broadcasts to remote logging systems
+		if( ii == 0 ){
+			// this call allows broadcast packets to be sent
+			if (setsockopt(udpParams.udpConnection[ii].socket, SOL_SOCKET, SO_BROADCAST, &broadcast, sizeof broadcast) == -1) {
+				perror("setsockopt (SO_BROADCAST)");
+				return false;
+			}
+		}
+
 		// add the listener to the master set
 		FD_SET( udpParams.udpConnection[ii].socket, &master);
 
@@ -203,104 +213,49 @@ uint8_t getCRC8(uint8_t *in, int len){
 /*
  * Send data over udp only to primary remote
  */
-
 void udp_tx_task(void *pvParameter){
-	adc_data_t in_raw;
-	uint8_t outbuf_raw[13];
-	udp_sensor_data_t in;
-	uint8_t outbuf[6];
-	uint8_t msg_id = 0x00;
+	sync_data_t sync_in;
+	shoe_data_t shoe_in;
+	uint8_t outbuf[512];
+	uint8_t bufsize = 0;
 
 	for(;;){
-		if(xQueuePeek( globalPtrs->udp_tx_q, &in_raw, pdMS_TO_TICKS(5000))) {
-			if((xEventGroupGetBits(globalPtrs->wifi_event_group ) & UDP_ENABLED )) {
-				//receive raw sensor data
-				if((xEventGroupGetBits(globalPtrs->system_event_group ) & SEND_RAW_DATA_ONLY ) > 0) {
-					int ii = 0, ii_0 = 0;
-					int data_pnt_offset = 0;
-					xQueueReceive( globalPtrs->udp_tx_q, &in_raw, 0);
-					outbuf_raw[ii++] = 0x53;			//start byte
-					outbuf_raw[ii++] = 9; 				//length
-					outbuf_raw[ii++] = in_raw.nodeid;	//node id
-					outbuf_raw[ii++] = in_raw.counter;	//counter
-					ii_0 = ii;
-					for (; ii < (ii_0 + sizeof(in_raw.data)); ii++){
-						outbuf_raw[ii] = *((uint8_t *)in_raw.data + data_pnt_offset);
-						data_pnt_offset++;
-					}
-//					outbuf_raw[12] = getChecksum(&outbuf_raw[0], sizeof(outbuf_raw));
-					outbuf_raw[12] = getCRC8(&outbuf_raw[0], sizeof(outbuf_raw));
-
-					sendto(udpParams.udpConnection[0].socket, outbuf_raw, sizeof(outbuf_raw), 0, (struct sockaddr * ) &udpParams.udpConnection[0].udpRemote, sizeof(udpParams.udpConnection[0].udpRemote));
-					udpParams.idlecount = 0;
-				}
-				//receive calibrated sensor data
-				else if((xEventGroupGetBits(globalPtrs->system_event_group ) & SEND_RAW_DATA_ONLY ) == 0) {
-					xQueueReceive( globalPtrs->udp_tx_q, &in, 0);
-					outbuf[0] = 0x53;				//start byte
-					outbuf[1] =	2;					//length
-					outbuf[2] = in.nodeid + msg_id;	//msg_id
-					outbuf[3] = in.counter;			//counter
-					outbuf[4] = in.data;			//data
-//					outbuf[5] = getChecksum(&outbuf[0], sizeof(outbuf));
-					outbuf_raw[5] = getCRC8(&outbuf_raw[0], sizeof(outbuf_raw));
-
-					sendto(udpParams.udpConnection[0].socket, outbuf, sizeof(outbuf), 0, (struct sockaddr * ) &udpParams.udpConnection[0].udpRemote, sizeof(udpParams.udpConnection[0].udpRemote));
-					udpParams.idlecount = 0;
+		if(xQueuePeek( globalPtrs->sync_tx_q, &sync_in, pdMS_TO_TICKS(1))) {
+			if(xQueueReceive( globalPtrs->sync_tx_q, &sync_in, pdMS_TO_TICKS(1))) {
+				if((xEventGroupGetBits(globalPtrs->wifi_event_group ) & UDP_ENABLED)) {
+					outbuf[0] = sync_in.startbyte;
+					outbuf[1] = sync_in.len;
+					outbuf[2] = sync_in.msgid;
+					outbuf[3] = (uint8_t) sync_in.timestamp;
+					outbuf[4] = (uint8_t) (sync_in.timestamp >> 8);
+					outbuf[5] = (uint8_t) sync_in.sync;
+					outbuf[6] = (uint8_t) (sync_in.sync >> 8);
+					outbuf[7] = sync_in.crc;
+					bufsize = 8;
+					sendto(udpParams.udpConnection[0].socket, outbuf, bufsize, 0, (struct sockaddr * ) &udpParams.udpConnection[0].udpRemote, sizeof(udpParams.udpConnection[0].udpRemote));
 				}
 			}
 		}
-
-		udpParams.idlecount++;
-
-		//keep the wifi connection alive, send a packet every 120 seconds (@ 1000hz tick rate)
-		if(udpParams.idlecount >= 24){
-			ESP_LOGI(TAG, "wifi keep-alive");
-			udpParams.idlecount = 0;
-			if(xEventGroupGetBits( globalPtrs->wifi_event_group ) & (UDP_ENABLED)) {
-				//send a zero integer
-				sendto(udpParams.udpConnection[0].socket, &udpParams.idlecount, sizeof(int), 0, (struct sockaddr * ) &udpParams.udpConnection[0].udpRemote, sizeof(udpParams.udpConnection[0].udpRemote));
-			}
-		}
-	}
-}
-
-/*
- * Send data over udp only to primary remote
- */
-
-void udp_tx_rawdata_task(void *pvParameter){
-
-	adc_data_t in;
-	uint8_t outbuf[sizeof(in.nodeid) + sizeof(in.counter) + sizeof(in.data) + 3];
-
-	for(;;){
-		if(xQueueReceive( globalPtrs->udp_tx_q, &in, pdMS_TO_TICKS(5000))) {
-			if((xEventGroupGetBits(globalPtrs->wifi_event_group ) & UDP_ENABLED)) {
-				//normal running, send data over UDP
-				outbuf[1] =	in.nodeid;
-				outbuf[2] = in.counter;
-				outbuf[3] = in.counter >> 8;
-				outbuf[4] = in.counter >> 16;
-				outbuf[5] = in.counter >> 24;
-				for (int ii = 0; ii < sizeof(in.data); ii++){
-					outbuf[6 + ii] = *((uint8_t *)in.data + ii);
+		else if(xQueuePeek( globalPtrs->shoe_tx_q, &shoe_in, pdMS_TO_TICKS(1))) {
+			if(xQueueReceive( globalPtrs->shoe_tx_q, &shoe_in, pdMS_TO_TICKS(1))) {
+				if((xEventGroupGetBits(globalPtrs->wifi_event_group ) & UDP_ENABLED)) {
+					outbuf[0] = shoe_in.startbyte;
+					outbuf[1] = shoe_in.len;
+					outbuf[2] = shoe_in.msgid;
+					outbuf[3] = (uint8_t) shoe_in.timestamp;
+					outbuf[4] = (uint8_t) (shoe_in.timestamp >> 8);
+					outbuf[5] = (uint8_t) shoe_in.data[0];
+					outbuf[6] = (uint8_t) (shoe_in.data[0] >> 8);
+					outbuf[7] = (uint8_t) shoe_in.data[1];
+					outbuf[8] = (uint8_t) (shoe_in.data[1] >> 8);
+					outbuf[9] = (uint8_t) shoe_in.data[2];
+					outbuf[10] = (uint8_t) (shoe_in.data[2] >> 8);
+					outbuf[11] = (uint8_t) shoe_in.data[3];
+					outbuf[12] = (uint8_t) (shoe_in.data[3] >> 8);
+					outbuf[13] = shoe_in.crc;
+					bufsize = 14;
+					sendto(udpParams.udpConnection[0].socket, outbuf, bufsize, 0, (struct sockaddr * ) &udpParams.udpConnection[0].udpRemote, sizeof(udpParams.udpConnection[0].udpRemote));
 				}
-				outbuf[14] = getCRC8(&outbuf[0], sizeof(outbuf));
-				sendto(udpParams.udpConnection[0].socket, outbuf, sizeof(outbuf), 0, (struct sockaddr * ) &udpParams.udpConnection[0].udpRemote, sizeof(udpParams.udpConnection[0].udpRemote));
-				udpParams.idlecount = 0;
-			}
-		}
-
-		udpParams.idlecount++;
-
-		//keep the wifi connection alive, send a packet every 120 seconds (@ 1000hz tick rate)
-		if(udpParams.idlecount >= 24){
-			ESP_LOGI(TAG, "wifi keep-alive");
-			udpParams.idlecount = 0;
-			if(xEventGroupGetBits( globalPtrs->wifi_event_group ) & (UDP_ENABLED)) {
-				//send a zero integer
-				sendto(udpParams.udpConnection[0].socket, &udpParams.idlecount, sizeof(int), 0, (struct sockaddr * ) &udpParams.udpConnection[0].udpRemote, sizeof(udpParams.udpConnection[0].udpRemote));
 			}
 		}
 	}
@@ -316,13 +271,19 @@ void udp_main_task(void *pvParameter)
 
     udpParams.idlecount = 0;
     resetSockets();
-
-	xTaskCreate(udp_tx_task, "udp_tx_task", 4096, NULL, 9, NULL);		//start udp transmit task
+    TaskHandle_t xHandle = NULL;
 
 	while(1){
 		if((xEventGroupGetBits( globalPtrs->wifi_event_group ) & (WIFI_READY | UDP_ENABLED)) == WIFI_READY){
-			//wifi enabled, udp not enabled
 			init_UDP();
+		}
+		else if((xEventGroupGetBits( globalPtrs->wifi_event_group ) & (WIFI_READY | UDP_ENABLED)) == (WIFI_READY | UDP_ENABLED)){
+			xTaskCreate(udp_tx_task, "udp_tx_task", 4096, NULL, 9, xHandle);		//start udp transmit task
+		}
+		else if((xEventGroupGetBits( globalPtrs->wifi_event_group ) & (WIFI_READY | UDP_ENABLED)) == UDP_ENABLED){
+			if( xHandle != NULL ) {	//calling delete on NULL handle causes calling task to be deleted
+				vTaskDelete( xHandle );
+			}
 		}
 		else if((xEventGroupGetBits( globalPtrs->wifi_event_group ) & (NEW_LOCALPORT | NEW_REMOTEIP | NEW_REMOTEPORT )) > 0 ){
 			//restart udp if udp connection address or ports have changed

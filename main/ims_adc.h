@@ -14,7 +14,8 @@ void timer_evt_task(void* arg);
 void IRAM_ATTR timer_group0_isr(void *para);
 void adc_main(void* arg);
 
-adc_data_t *adc_out;
+sync_data_t *sync_out;
+shoe_data_t *shoe_out;
 
 uint16_t median_filter(uint16_t val, uint16_t *array);
 uint16_t getMedianValue(uint16_t *a);

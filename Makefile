@@ -3,7 +3,7 @@
 # project subdirectory.
 #
 
-PROJECT_NAME := esp32_sensor
+PROJECT_NAME := esp32-sensor
 
 include $(IDF_PATH)/make/project.mk
 

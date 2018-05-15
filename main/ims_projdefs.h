@@ -17,24 +17,25 @@ extern "C" {
 #include "freertos/event_groups.h"
 
 
-#define WIFI_SSID		"XoSoft"//"gzb-99507"//
-#define WIFI_PASSWORD	"123qweASD"//"cd5h-6j1m-txga-fkga"//
+#define WIFI_SSID		"XoSoft"
+#define WIFI_PASSWORD	"123qweASD"
 
-#define DEFAULT_LOCALIP 	"192.168.0.10"//"192.168.1.10" //
+#define DEFAULT_LOCALIP 	"192.168.0.100"//"192.168.1.10" //
 #define DEFAULT_NETMASK 	"255.255.255.0"
 #define DEFAULT_GATEWAY 	"192.168.0.1"//"192.168.1.1"//
-#define DEFAULT_REMOTEIP 	"192.168.0.100"//"192.168.1.201"//
+#define DEFAULT_REMOTEIP 	"192.168.0.255"//"192.168.1.201"//
 #define DEFAULT_OTASERVER 	"192.168.0.101"//"192.168.1.201"//
 #define DEFAULT_NULLIP	 	"0.0.0.0"
 #define DEFAULT_NODEID		5
-#define DEFAULT_LOCALPORT 	16500
-#define DEFAULT_REMOTEPORT	16501
+#define DEFAULT_LOCALPORT 	14551
+#define DEFAULT_REMOTEPORT	14550
 #define HTTP_PORT			"8070"
 #define FW_FILENAME			"/esp32_sensor.bin"
 #define DEFAULT_THRESHOLD 	15
 
 #define TCPPORT 80
 #define BUFSIZE 1024
+#define UDPBUFSIZE 512
 #define ADCBUFSIZE 4
 #define MAXSTRLENGTH 255
 #define MAXFILENAMELENGTH 8
@@ -79,14 +80,30 @@ typedef struct udp_connection {
 typedef struct global_ip_info {
 	tcpip_adapter_ip_info_t localIpInfo;	//local tcp connection settings
 	udp_connection_t remotes[NUMREMOTES];	//udp remote connection settings
-}global_ip_info_t;
+} global_ip_info_t;
 
 typedef struct {
-	uint8_t nodeid;
-	uint8_t counter;
 	int size;					//number of bytes of valid data
-	uint16_t data[ADCBUFSIZE];	//data array
-} adc_data_t;
+	uint8_t* data;	//data array
+} udp_data_t;
+
+typedef struct {
+	uint8_t startbyte;
+	uint8_t len;
+	uint8_t msgid;
+	uint16_t timestamp;
+	uint16_t data[4];
+	uint8_t crc;
+} shoe_data_t;
+
+typedef struct {
+	uint8_t startbyte;
+	uint8_t len;
+	uint8_t msgid;
+	uint16_t timestamp;
+	uint16_t sync;
+	uint8_t crc;
+} sync_data_t;
 
 typedef struct {
 	uint8_t nodeid;
@@ -97,8 +114,10 @@ typedef struct {
 typedef struct {
 	EventGroupHandle_t wifi_event_group;
 	EventGroupHandle_t system_event_group;
-	QueueHandle_t udp_tx_q;
-	QueueHandle_t adc_q;
+	QueueHandle_t udp_tx_q;	//TODO: still necessary?
+	QueueHandle_t sync_tx_q;
+	QueueHandle_t shoe_tx_q;
+	QueueHandle_t adc_q;	//TODO: remove this
 } globalptrs_t;
 
 #ifdef __cplusplus

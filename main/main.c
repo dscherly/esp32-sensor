@@ -52,9 +52,18 @@ esp_err_t event_handler(void *ctx, system_event_t *event) {
         ESP_LOGI(TAG, "Wifi ready");
 		break;
 	case SYSTEM_EVENT_STA_CONNECTED:
+		ESP_LOGI(TAG, "Client connected")
+		break;
+	case SYSTEM_EVENT_AP_START:
+        xEventGroupSetBits( globalPtrs.wifi_event_group, (CONNECTED_BIT | WIFI_READY));
+		ESP_LOGI(TAG, "AP started");
 		break;
 	case SYSTEM_EVENT_STA_DISCONNECTED:
 		ESP_LOGI(TAG, "STA disconnected, wifi not ready");
+		xEventGroupClearBits( globalPtrs.wifi_event_group, (CONNECTED_BIT | WIFI_READY | UDP_ENABLED));
+		break;
+	case SYSTEM_EVENT_AP_STOP:
+		ESP_LOGI(TAG, "AP stopped");
 		xEventGroupClearBits( globalPtrs.wifi_event_group, (CONNECTED_BIT | WIFI_READY | UDP_ENABLED));
 		break;
 	default:
@@ -73,8 +82,10 @@ void app_main(void) {
 
     globalPtrs.wifi_event_group = xEventGroupCreate();
     globalPtrs.system_event_group = xEventGroupCreate();
-    globalPtrs.udp_tx_q = xQueueCreate(10, sizeof(adc_data_t));
-    globalPtrs.adc_q = xQueueCreate(10, sizeof(adc_data_t));
+    globalPtrs.udp_tx_q = xQueueCreate(10, sizeof(shoe_data_t));
+    globalPtrs.sync_tx_q = xQueueCreate(10, sizeof(sync_data_t));
+    globalPtrs.shoe_tx_q = xQueueCreate(10, sizeof(shoe_data_t));
+    globalPtrs.adc_q = xQueueCreate(10, sizeof(shoe_data_t));
 
 	ESP_ERROR_CHECK(esp_event_loop_init(event_handler, NULL));
 
@@ -87,7 +98,6 @@ void app_main(void) {
 	xTaskCreate(udp_main_task, "udp_main_task", 8192, (void *) &globalPtrs, 4, NULL);	//start udp task
 	xTaskCreate(tcp_task, "tcp_task", 8192, (void *) &globalPtrs, 4, NULL);				//start tcp task
 	adc_main((void *) &globalPtrs);
-	sensor_main((void *) &globalPtrs);
 
 	const esp_partition_t *boot_part = esp_ota_get_boot_partition();
 	ESP_LOGI(TAG, "boot partition label: %s", boot_part->label)

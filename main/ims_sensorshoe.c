@@ -36,7 +36,7 @@
 static const char *TAG = "shoesensor";
 
 globalptrs_t *globalPtrs;
-adc_data_t *in;
+shoe_data_t *in;
 udp_sensor_data_t *out;
 bool calibrate_running = false;
 
@@ -101,8 +101,8 @@ void sensor_eval_task(void *arg) {
 					}
 				}
 //				ESP_LOGI(TAG,"%c%c%c%c%c%c%c%c", BYTE_TO_BINARY(out->data));
-				out->nodeid = in->nodeid;
-				out->counter = in->counter;
+				out->nodeid = in->msgid;
+				out->counter = in->timestamp;
 
 				xQueueSend( globalPtrs->udp_tx_q, (void *) out, ( TickType_t ) 0); //dont wait if queue is full
 			}
@@ -172,7 +172,7 @@ void sensor_main(void* arg)
 {
 	globalPtrs = (globalptrs_t *) arg;
 	out = (udp_sensor_data_t *) malloc (sizeof(udp_sensor_data_t));
-	in = (adc_data_t *) malloc (sizeof(adc_data_t));
+	in = (shoe_data_t *) malloc (sizeof(shoe_data_t));
 
 	//init the measurement arrays
 	initShoeSensor();

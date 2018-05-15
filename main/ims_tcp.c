@@ -99,30 +99,28 @@ void init_flash_variables(globalptrs_t *arg){
  */
 void init_wifi(){
 	tcpip_adapter_init();
-
-	wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-	ESP_ERROR_CHECK(esp_wifi_init(&cfg));
-
-	//manually set ip address for wifi STA connection
-	tcpip_adapter_dhcpc_stop(TCPIP_ADAPTER_IF_STA);
-	tcpip_adapter_set_ip_info(TCPIP_ADAPTER_IF_STA, &globalIpInfo.localIpInfo);
+	ESP_ERROR_CHECK(tcpip_adapter_dhcps_stop(TCPIP_ADAPTER_IF_AP));
+	ESP_ERROR_CHECK(tcpip_adapter_set_ip_info(TCPIP_ADAPTER_IF_AP, &globalIpInfo.localIpInfo));
+	ESP_ERROR_CHECK(tcpip_adapter_dhcps_start(TCPIP_ADAPTER_IF_AP));
+	wifi_init_config_t wifi_init_config = WIFI_INIT_CONFIG_DEFAULT();
+	ESP_ERROR_CHECK(esp_wifi_init(&wifi_init_config));
 	ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_FLASH));
-	ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
-	wifi_config_t sta_config = {
-			.sta = {
-					.ssid = WIFI_SSID,
-					.password = WIFI_PASSWORD,
-					.bssid_set = false,
-			}
+	ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP));
+
+	wifi_config_t ap_config = {
+		.ap = {
+			.ssid = WIFI_SSID,
+			//.password = CONFIG_AP_PASSWORD,
+			.ssid_len = 0,
+			.channel = 0,
+			.authmode = WIFI_AUTH_OPEN,
+			.ssid_hidden = 0,
+			.max_connection = 15,
+			.beacon_interval = 100,
+		},
 	};
-
-	ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &sta_config));
-	ESP_ERROR_CHECK(esp_wifi_start());
-	ESP_ERROR_CHECK(esp_wifi_disconnect());
-
-	//ESP_LOGI(TAG, "wifi starting, wait..");
-	ESP_ERROR_CHECK(esp_wifi_connect());
-
+	ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &ap_config));
+	esp_wifi_start();
 }
 
 /*
@@ -411,6 +409,7 @@ void parseRecvData(char *tcpbuffer, int nbytes, int socket){
 void sendReplyHTML(int socket){
 
 	char sendbuf[4096] = { 0 };
+	int sendbuflen = 0;
 
 	char ipbuf[20];
 	char nmbuf[20];
@@ -424,8 +423,7 @@ void sendReplyHTML(int socket){
 	inet_ntop(AF_INET,&globalIpInfo.remotes[0].ip,ripbuf0,20);
 
 	//reply with some html
-	sprintf(sendbuf, "HTTP/1.1 200 OK\r\n"
-			"Content-Type: text/html\r\n\r\n"
+	sendbuflen = sprintf(sendbuf, "<!DOCTYPE html>\n"
 			"<html>\n"
 			"<head>\n"
 			"<title>Wifi Sensor</title>\n"
@@ -478,7 +476,7 @@ void sendReplyHTML(int socket){
 			"<p></p>\n"
 			"<form action=\"\"><input type=\"submit\" value=\"Refresh page\">\n"
 			"</form></body></html>\r\n", nodeid, ipbuf, ripbuf0, nmbuf, globalIpInfo.remotes[0].localPort, gwbuf, globalIpInfo.remotes[0].remotePort, submitStr, calibrateStr, calibrateStr, threshold, sendRawDataStr, sendRawDataStr);
-	if (send(socket, sendbuf, sizeof(sendbuf), 0) == -1) { //this has to be sizeof the whole buffer
+	if (send(socket, sendbuf, sendbuflen, 0) == -1) {
 		perror("send");
 	}
 
