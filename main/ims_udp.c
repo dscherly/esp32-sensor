@@ -220,7 +220,7 @@ void udp_tx_task(void *pvParameter){
 	uint8_t bufsize = 0;
 
 	for(;;){
-		if(xQueuePeek( globalPtrs->sync_tx_q, &sync_in, pdMS_TO_TICKS(1))) {
+		if(xQueuePeek( globalPtrs->sync_tx_q, &sync_in, 0)) {
 			if(xQueueReceive( globalPtrs->sync_tx_q, &sync_in, pdMS_TO_TICKS(1))) {
 				if((xEventGroupGetBits(globalPtrs->wifi_event_group ) & UDP_ENABLED)) {
 					outbuf[0] = sync_in.startbyte;
@@ -230,13 +230,13 @@ void udp_tx_task(void *pvParameter){
 					outbuf[4] = (uint8_t) (sync_in.timestamp >> 8);
 					outbuf[5] = (uint8_t) sync_in.sync;
 					outbuf[6] = (uint8_t) (sync_in.sync >> 8);
-					outbuf[7] = sync_in.crc;
+					outbuf[7] = getCRC8( (uint8_t*) &outbuf, 8 );
 					bufsize = 8;
 					sendto(udpParams.udpConnection[0].socket, outbuf, bufsize, 0, (struct sockaddr * ) &udpParams.udpConnection[0].udpRemote, sizeof(udpParams.udpConnection[0].udpRemote));
 				}
 			}
 		}
-		else if(xQueuePeek( globalPtrs->shoe_tx_q, &shoe_in, pdMS_TO_TICKS(1))) {
+		else if(xQueuePeek( globalPtrs->shoe_tx_q, &shoe_in, 0)) {
 			if(xQueueReceive( globalPtrs->shoe_tx_q, &shoe_in, pdMS_TO_TICKS(1))) {
 				if((xEventGroupGetBits(globalPtrs->wifi_event_group ) & UDP_ENABLED)) {
 					outbuf[0] = shoe_in.startbyte;
@@ -252,7 +252,7 @@ void udp_tx_task(void *pvParameter){
 					outbuf[10] = (uint8_t) (shoe_in.data[2] >> 8);
 					outbuf[11] = (uint8_t) shoe_in.data[3];
 					outbuf[12] = (uint8_t) (shoe_in.data[3] >> 8);
-					outbuf[13] = shoe_in.crc;
+					outbuf[13] = getCRC8( (uint8_t*) &outbuf, 14 );
 					bufsize = 14;
 					sendto(udpParams.udpConnection[0].socket, outbuf, bufsize, 0, (struct sockaddr * ) &udpParams.udpConnection[0].udpRemote, sizeof(udpParams.udpConnection[0].udpRemote));
 				}
@@ -278,11 +278,15 @@ void udp_main_task(void *pvParameter)
 			init_UDP();
 		}
 		else if((xEventGroupGetBits( globalPtrs->wifi_event_group ) & (WIFI_READY | UDP_ENABLED)) == (WIFI_READY | UDP_ENABLED)){
-			xTaskCreate(udp_tx_task, "udp_tx_task", 4096, NULL, 9, xHandle);		//start udp transmit task
+			if( xHandle == NULL ){
+				xTaskCreate(udp_tx_task, "udp_tx_task", 4096, NULL, 3, &xHandle);		//start udp transmit task
+				ESP_LOGI(TAG,"udp task created");
+			}
 		}
 		else if((xEventGroupGetBits( globalPtrs->wifi_event_group ) & (WIFI_READY | UDP_ENABLED)) == UDP_ENABLED){
 			if( xHandle != NULL ) {	//calling delete on NULL handle causes calling task to be deleted
 				vTaskDelete( xHandle );
+				ESP_LOGI(TAG,"udp task deleted");
 			}
 		}
 		else if((xEventGroupGetBits( globalPtrs->wifi_event_group ) & (NEW_LOCALPORT | NEW_REMOTEIP | NEW_REMOTEPORT )) > 0 ){

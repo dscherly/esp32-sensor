@@ -36,8 +36,8 @@
 #include "ims_ota.h"
 #include "ims_tcp.h"
 #include "ims_udp.h"
-#include "ims_adc.h"
 #include "ims_sensorshoe.h"
+#include "ims_simdata.h"
 
 static const char *TAG = "main";
 
@@ -51,8 +51,14 @@ esp_err_t event_handler(void *ctx, system_event_t *event) {
         xEventGroupSetBits( globalPtrs.wifi_event_group, (CONNECTED_BIT | WIFI_READY));
         ESP_LOGI(TAG, "Wifi ready");
 		break;
-	case SYSTEM_EVENT_STA_CONNECTED:
+	case SYSTEM_EVENT_AP_STACONNECTED:
 		ESP_LOGI(TAG, "Client connected")
+		break;
+	case SYSTEM_EVENT_AP_STADISCONNECTED:
+		ESP_LOGI(TAG, "Client disconnected")
+		break;
+	case SYSTEM_EVENT_AP_PROBEREQRECVED:
+		ESP_LOGI(TAG, "Probe request received")
 		break;
 	case SYSTEM_EVENT_AP_START:
         xEventGroupSetBits( globalPtrs.wifi_event_group, (CONNECTED_BIT | WIFI_READY));
@@ -97,7 +103,7 @@ void app_main(void) {
 
 	xTaskCreate(udp_main_task, "udp_main_task", 8192, (void *) &globalPtrs, 4, NULL);	//start udp task
 	xTaskCreate(tcp_task, "tcp_task", 8192, (void *) &globalPtrs, 4, NULL);				//start tcp task
-	adc_main((void *) &globalPtrs);
+	simdata_main((void *) &globalPtrs);
 
 	const esp_partition_t *boot_part = esp_ota_get_boot_partition();
 	ESP_LOGI(TAG, "boot partition label: %s", boot_part->label)

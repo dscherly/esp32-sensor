@@ -50,20 +50,16 @@ bool notfound = false;
  */
 void init_flash_variables(globalptrs_t *arg){
 
-	//set local ip info
+	//set local ip and gateway info
 	if( !get_flash_uint32( &globalIpInfo.localIpInfo.ip.addr, "localip") ){
 		inet_pton(AF_INET, DEFAULT_LOCALIP, &globalIpInfo.localIpInfo.ip);
+		inet_pton(AF_INET, DEFAULT_LOCALIP, &globalIpInfo.localIpInfo.gw);
 		set_flash_uint32(globalIpInfo.localIpInfo.ip.addr, "localip");
 	}
 
 	if( !get_flash_uint32( &globalIpInfo.localIpInfo.netmask.addr, "netmask") ){
 		inet_pton(AF_INET, DEFAULT_NETMASK, &globalIpInfo.localIpInfo.netmask);
 		set_flash_uint32(globalIpInfo.localIpInfo.netmask.addr, "netmask");
-	}
-
-	if( !get_flash_uint32( &globalIpInfo.localIpInfo.gw.addr, "gateway") ){
-		inet_pton(AF_INET, DEFAULT_GATEWAY, &globalIpInfo.localIpInfo.gw);
-		set_flash_uint32(globalIpInfo.localIpInfo.gw.addr, "gateway");
 	}
 
 	//set first remote port with default values
@@ -189,7 +185,6 @@ void parseRecvData(char *tcpbuffer, int nbytes, int socket){
 	int iscommand = false;
 	int islocalip = false;
 	int isnetmask = false;
-	int isgatewayip = false;
 	int isremoteip0 = false;	//todo fix these
 	int isremoteport0 = false;
 	int islocalport0 = false;
@@ -246,22 +241,6 @@ void parseRecvData(char *tcpbuffer, int nbytes, int socket){
 				}
 				isnetmask = false;
 			}
-
-
-			else if(strcmp(pch, "gatewayip") == 0){		//a new gateway ip entered
-				isgatewayip = true;
-			}
-			else if(isgatewayip){
-				inet_pton(AF_INET, pch, &tempIpInfo.gw);	//convert ip string to network format u32
-				if(tempIpInfo.gw.addr != globalIpInfo.localIpInfo.gw.addr){
-					globalIpInfo.localIpInfo.gw.addr = tempIpInfo.gw.addr;
-					set_flash_uint32(globalIpInfo.localIpInfo.gw.addr, "gateway");
-					strcpy(submitStr,"Settings updated<br>");
-					xEventGroupSetBits( globalPtrs->wifi_event_group, NEW_GATEWAY );
-				}
-				isgatewayip = false;
-			}
-
 
 			else if(strcmp(pch, "remoteip0") == 0){		//a new remote ip address is entered
 				isremoteip0 = true;
@@ -426,12 +405,11 @@ void sendReplyHTML(int socket){
 	sendbuflen = sprintf(sendbuf, "<!DOCTYPE html>\n"
 			"<html>\n"
 			"<head>\n"
-			"<title>Wifi Sensor</title>\n"
+			"<title>XoSoft Data Simulator</title>\n"
 			"</head>\n"
 			"<body>\n"
-			"<h3>Wifi Sensor configuration</h3>\n"
+			"<h3>XoSoft Data Simulator</h3>\n"
 			"<form action=\"\" method=\"get\">\n"
-			"<p>Node ID:&nbsp;<input name=\"nodeid\" type=\"number\" min=\"0\" max=\"255\" value=\"%d\" /></p>"
 			"<table border=\"0\">\n"
 			"<tr><th colspan=\"2\">Local settings</th><th colspan=\"2\">UDP Remote</th></tr>\n"
 			"<tr>\n"
@@ -442,30 +420,13 @@ void sendReplyHTML(int socket){
 			"<td>Netmask:</td><td><input type=\"text\" name=\"netmask\" value=\"%s\" size=\"11\" maxlength=\"15\"></td>\n"
 			"<td>Local port:</td><td><input type=\"text\" name=\"localport0\" value=\"%d\" size=\"11\"></td>"
 			"</tr>\n"
-			"<tr><td>Gateway:</td>\n"
-			"<td><input type=\"text\" name=\"gatewayip\" value=\"%s\" size=\"11\" maxlength=\"15\"></td>\n"
+			"<tr><td></td>\n"
+			"<td></td>\n"
 			"<td>Remote port:</td><td><input type=\"text\" name=\"remoteport0\" value=\"%d\" size=\"11\"></td>\n"
 			"</tr>\n"
 			"</table>\n"
 			"<font color=\"green\">%s</font>\n"
 			"<input type=\"submit\" value=\"Save\">\n"
-			"</form>\n"
-
-			"<form action=\"\" method=\"get\">\n"
-			"Sensor calibration:&nbsp;\n"
-			"<input type=\"hidden\" name=\"calibrate\" value=\"%s\" disabled=\"disabled\">"
-			"<input type=\"submit\" value=\"%s\" disabled=\"disabled\">\n"
-			"</form>\n"
-
-			"<form action=\"\" method=\"get\">\n"
-			"<p>Threshold:&nbsp;<input name=\"threshold\" type=\"number\" min=\"0\" max=\"100\" value=\"%d\"  disabled=\"disabled\" size=\"8\"/>&nbsp;%%\n"
-			"<input type=\"submit\" value=\"set\" disabled=\"disabled\">\n"
-			"</form>\n"
-
-			"<form action=\"\" method=\"get\">\n"
-			"Transmit raw sensor data only:&nbsp;\n"
-			"<input type=\"hidden\" name=\"rawdata\" value=\"%s\" disabled=\"disabled\">"
-			"<input type=\"submit\" onclick=\"rawdata\" value=\"%s\" disabled=\"disabled\">\n"
 			"</form>\n"
 
 			"<h3>Firmware update</h3>\n"
@@ -475,7 +436,7 @@ void sendReplyHTML(int socket){
 			"</form>\n"
 			"<p></p>\n"
 			"<form action=\"\"><input type=\"submit\" value=\"Refresh page\">\n"
-			"</form></body></html>\r\n", nodeid, ipbuf, ripbuf0, nmbuf, globalIpInfo.remotes[0].localPort, gwbuf, globalIpInfo.remotes[0].remotePort, submitStr, calibrateStr, calibrateStr, threshold, sendRawDataStr, sendRawDataStr);
+			"</form></body></html>\r\n", ipbuf, ripbuf0, nmbuf, globalIpInfo.remotes[0].localPort, globalIpInfo.remotes[0].remotePort, submitStr);
 	if (send(socket, sendbuf, sendbuflen, 0) == -1) {
 		perror("send");
 	}

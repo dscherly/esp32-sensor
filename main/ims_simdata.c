@@ -20,24 +20,22 @@
 #include "sdkconfig.h"
 #include "esp_log.h"
 #include "ims_projdefs.h"
-#include "ims_adc.h"
 #include "ims_nvs.h"
 #include "ims_udp.h"
 #include "math.h"
+#include "ims_simdata.h"
 
 #define TIMER_INTR_SEL TIMER_INTR_LEVEL  /*!< Timer level interrupt */
 #define TIMER_GROUP    TIMER_GROUP_0     /*!< Test on timer group 0 */
 #define TIMER_DIVIDER   16               /*!< Hardware timer clock divider */
 #define TIMER_SCALE    (TIMER_BASE_CLK / TIMER_DIVIDER)  /*!< used to calculate counter value */
 #define TIMER_FINE_ADJ   (1.4*(TIMER_BASE_CLK / TIMER_DIVIDER)/1000000) /*!< used to compensate alarm value */
-#define TIMER_INTERVAL0_SEC   0.008333333333333333//(0.02)   /*!< test interval for timer 0 */ sample rate of 60Hz
+#define TIMER_INTERVAL0_SEC   0.008333333333333333
 #define TEST_WITHOUT_RELOAD   0   /*!< example of auto-reload mode */
 #define TEST_WITH_RELOAD   	1      /*!< example without auto-reload mode */
 #define DISABLE_INTERRUPT	2
 #define NODEID_CHANGE		3
 #define DEBUG				4
-#define MERGESORT			5
-#define MED_FILT_WINDOW_SIZE	5
 
 static const char *TAG = "adc";
 
@@ -53,6 +51,7 @@ typedef struct {
 globalptrs_t *globalPtrs;
 
 xQueueHandle timer_queue;
+int timerflag = 0;
 
 /*
  * @brief timer group0 hardware timer0 init
@@ -108,12 +107,12 @@ void timer_evt_task(void *arg)
         	}
         } else if(evt.type == NODEID_CHANGE) {
         	xEventGroupClearBits( globalPtrs->system_event_group, NEW_NODEID);
-        	if( !get_flash_uint8( &(shoe_out->msgid), "nodeid") ){
-        		shoe_out->msgid = (uint8_t) DEFAULT_NODEID;
+        	if( !get_flash_uint8( &(shoe_out_r->msgid), "nodeid") ){
+        		shoe_out_r->msgid = (uint8_t) DEFAULT_NODEID;
         	}
         } else if (evt.type == DEBUG) {
         	xEventGroupClearBits( globalPtrs->system_event_group, DEBUG);
-//        	ESP_LOGI(TAG,"nodeid = %d, counter = %d", shoe_out->nodeid, shoe_out->counter);
+//        	ESP_LOGI(TAG,"nodeid = %d, counter = %d", shoe_out_r->nodeid, shoe_out_r->counter);
 //        	ESP_LOGI(TAG,"adc0_filter: %d %d %d", adc0_filter[0], adc0_filter[1], adc0_filter[2]);
 //        	ESP_LOGI(TAG,"b: %d %d %d", b[0], b[1], b[2]);
         }
@@ -148,17 +147,29 @@ void IRAM_ATTR timer_group0_isr(void *para)
         //send sync packet first
         sync_out->timestamp++;
         sync_out->sync = (uint16_t) 1;
-        sync_out->crc = getCRC8( (uint8_t*) sync_out, sizeof(sync_data_t) ); //TODO check this
+        sync_out->crc = 0;
         xQueueSendFromISR( globalPtrs->sync_tx_q, (void *) sync_out, ( TickType_t ) 0);
 
-        //send simulated insole data
-        shoe_out->timestamp++;
-        shoe_out->data[0] = ((uint16_t) rand()) >> 7;
-        shoe_out->data[1] = (((uint16_t) rand()) >> 7) + 1000;
-        shoe_out->data[2] = (((uint16_t) rand()) >> 7) + 2000;
-        shoe_out->data[3] = (((uint16_t) rand()) >> 7) + 3000;
-        shoe_out->crc = getCRC8( (uint8_t*) shoe_out, sizeof(shoe_data_t) ); //TODO check this
-		xQueueSendFromISR( globalPtrs->shoe_tx_q, (void *) shoe_out, ( TickType_t ) 0);
+        //timerflag activates every second interrupt so that we can send data at half the frequency with the same timer
+    	shoe_out_r->timestamp++;
+    	shoe_out_l->timestamp++;
+        timerflag = !timerflag;
+        if (timerflag) {
+        	//send simulated insole data
+        	shoe_out_r->data[0] = ((uint16_t) rand()) >> 7;
+        	shoe_out_r->data[1] = (((uint16_t) rand()) >> 7) + 1000;
+        	shoe_out_r->data[2] = (((uint16_t) rand()) >> 7) + 2000;
+        	shoe_out_r->data[3] = (((uint16_t) rand()) >> 7) + 3000;
+        	shoe_out_r->crc = 0;
+        	xQueueSendFromISR( globalPtrs->shoe_tx_q, (void *) shoe_out_r, ( TickType_t ) 0);
+
+        	shoe_out_l->data[0] = (((uint16_t) rand()) >> 7) + 500;
+        	shoe_out_l->data[1] = (((uint16_t) rand()) >> 7) + 800;
+        	shoe_out_l->data[2] = (((uint16_t) rand()) >> 7) + 1600;
+        	shoe_out_l->data[3] = (((uint16_t) rand()) >> 7) + 2400;
+        	shoe_out_l->crc = 0;
+        	xQueueSendFromISR( globalPtrs->shoe_tx_q, (void *) shoe_out_l, ( TickType_t ) 0);
+        }
 
         /*For a timer that will not reload, we need to set the next alarm value each time. */
         timer_val += (uint64_t) (TIMER_INTERVAL0_SEC * (TIMER_BASE_CLK / TIMERG0.hw_timer[timer_idx].config.divider));
@@ -174,15 +185,13 @@ void IRAM_ATTR timer_group0_isr(void *para)
     }
 }
 
-/**
- * @brief In this test, we will test hardware timer0 and timer1 of timer group0.
- */
-void adc_main(void* arg)
+void simdata_main(void* arg)
 {
 	globalPtrs = (globalptrs_t *) arg;
 
 	sync_out = (sync_data_t *) malloc (sizeof(sync_data_t));
-	shoe_out = (shoe_data_t *) malloc (sizeof(shoe_data_t));
+	shoe_out_r = (shoe_data_t *) malloc (sizeof(shoe_data_t));
+	shoe_out_l = (shoe_data_t *) malloc (sizeof(shoe_data_t));
 
 	sync_out->startbyte = 165;
 	sync_out->len = 4;
@@ -190,15 +199,18 @@ void adc_main(void* arg)
 	sync_out->timestamp = 0;
 	sync_out->sync = 0;
 	sync_out->crc = 0;
-    ESP_LOGI(TAG,"sizeof(sync_data_t): %d",sizeof(sync_data_t))
 
-	shoe_out->startbyte = 165;
-	shoe_out->len = 10;
-	shoe_out->msgid = 5;
-	shoe_out->timestamp = 0;
-	shoe_out->crc = 0;
-    ESP_LOGI(TAG,"sizeof(adc_data_t): %d",sizeof(shoe_data_t))
+	shoe_out_r->startbyte = 165;
+	shoe_out_r->len = 10;
+	shoe_out_r->msgid = 5;
+	shoe_out_r->timestamp = 0;
+	shoe_out_r->crc = 0;
 
+	shoe_out_l->startbyte = 165;
+    shoe_out_l->len = 10;
+    shoe_out_l->msgid = 6;
+    shoe_out_l->timestamp = 0;
+    shoe_out_l->crc = 0;
 
 	timer_queue = xQueueCreate(10, sizeof(timer_event_t));
 	tg0_timer0_init();
